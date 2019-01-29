@@ -52,6 +52,32 @@ private:
   static inline bool button = false;
 };
 
+template <typename T>
+class typeTriggerStack  {
+ public:
+  void trigger(unsigned int a)  {
+    stack.push_back(a);
+  }
+  bool check()  {
+    return !stack.empty();
+  }
+  std::vector<unsigned int>& get() {
+    return stack;
+  }
+  bool reset()  {
+    if(stack.empty()) {
+      return false;
+    } else {
+      return true;
+      stack.clear();
+    }
+  }
+ 
+ private:
+  friend T;
+  static inline std::vector<unsigned int> stack;
+};
+
 class baseEntity {
 public:
   virtual ~baseEntity() {
