@@ -211,9 +211,10 @@ public:
 
 class pauseState : public kge::abstractState {
  public:
-  pauseState(sf::RenderWindow* const aPtr, kge::mainLoop* const mainLoopPtr)
+  pauseState(sf::RenderWindow* const aPtr, kge::mainLoop* const mainLoopPtr, kge::entCompHandler<sf::ConvexShape>* aMetPtr)
   : wPtr(aPtr)
-  , mMainLoopPtr(mainLoopPtr) {
+  , mMainLoopPtr(mainLoopPtr)
+  , metPtr(aMetPtr) {
     if(!font.loadFromFile("../thirdParty/LiberationSans-Regular.ttf")) {
       font.loadFromFile("thirdParty/LiberationSans-Regular.ttf");
     }
@@ -252,13 +253,23 @@ class pauseState : public kge::abstractState {
   }
  
   void render(double dt) {
-    mMainLoopPtr->peekUnderState()->render(dt);
+    wPtr->clear(sf::Color::Black);
+    sf::RectangleShape greyBack;
+    greyBack.setFillColor(sf::Color(0, 0, 0, 200));
+    greyBack.setSize(wPtr->getView().getSize());
+    for ( auto& i : metPtr->container) {
+      if(i.get()) {
+          wPtr->draw(*i);
+      }
+    }
+    wPtr->draw(greyBack);
     wPtr->draw(text);
     wPtr->display();
   }
   
   sf::RenderWindow* const wPtr;
-  kge::mainLoop* mMainLoopPtr;
+  kge::mainLoop* const mMainLoopPtr;
+  kge::entCompHandler<sf::ConvexShape>* metPtr;
   sf::Font font;
   sf::Text text;
             
@@ -319,7 +330,9 @@ class gameState : public kge::abstractState {
           break;
         case sf::Event::KeyPressed:
           if (event.key.code == sf::Keyboard::Space) {
-            mMainLoopPtr->pushState<pauseState, sf::RenderWindow* const, kge::mainLoop* const>(wPtr, mMainLoopPtr);
+            mMainLoopPtr->pushState<pauseState, sf::RenderWindow* const,
+                                    kge::mainLoop* const,
+                                    kge::entCompHandler<sf::ConvexShape>*>(wPtr, mMainLoopPtr, &meteor);
           }
           if (event.key.code == sf::Keyboard::Escape) {
             mMainLoopPtr->popState();
@@ -342,7 +355,7 @@ class gameState : public kge::abstractState {
   }
 
   sf::RenderWindow* const wPtr;
-  kge::mainLoop* mMainLoopPtr;
+  kge::mainLoop* const mMainLoopPtr;
   kge::entCompHandler<kge::baseEntity> entities;
   kge::entCompHandler<kge::point<double>> position;
   kge::entCompHandler<kge::point<double>> direction;
