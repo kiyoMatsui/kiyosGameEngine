@@ -50,7 +50,7 @@ public:
     return *this;
   }
 
-  point<T> &operator*(const T &arg1) {
+  point<T> &operator*=(const T &arg1) {
     kgeTestPrint("called operator * for type");
     this->x *= arg1;
     this->y *= arg1;
