@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2019 Kiyo Matsui
-KiyosGameEngine v0.7
+KiyosGameEngine v0.73
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -20,7 +20,7 @@ http://www.apache.org/licenses/
 #include <SFML/Graphics.hpp>
 
 #include "kgeMainLoop.h"
-#include "kgePoint.h"
+#include "kgePointLine.h"
 #include "kgeECS.h"
 
 class createdEntity;
@@ -48,8 +48,7 @@ public:
         if (position.getItem(i->ID)
           && direction.getItem(i->ID)) {
         bool killFlag = false;
-        (*posPtr).x += (dirPtr->x * dt);
-        (*posPtr).y += (dirPtr->y * dt);
+        (*posPtr) += (*dirPtr * dt);
 
         if ((posPtr->x  < 10 && dirPtr->x < 0)
             || (posPtr->x > screenSize.x-10 && dirPtr->x > 0)) {

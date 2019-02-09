@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2019 Kiyo Matsui
-KiyosGameEngine v0.7
+KiyosGameEngine v0.73
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -23,7 +23,7 @@ http://www.apache.org/licenses/
 #define protected public
 
 #include "kgeMainLoop.h"
-#include "kgePoint.h"
+#include "kgePointLine.h"
 
 class testState1;
 class testState2;
