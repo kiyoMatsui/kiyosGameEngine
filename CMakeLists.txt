@@ -60,12 +60,11 @@ TARGET_LINK_LIBRARIES(${EXAMPLE2_BIN} ${KGEPROJECT_LIBS})
 INSTALL(TARGETS ${EXAMPLE_BIN} DESTINATION bin)
 else()
 SET(KGEPROJECT_LIBS ${CMAKE_DL_LIBS} )
-   message(WARNING "-> not building sfml example")
+   message(WARNING "-> not building sfml examples")
 endif()
 
 macro(create_test TARGET_NAME SOURCE DEPENDENCIES)
     add_executable(${TARGET_NAME} ${SOURCE})
-    set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "testsDoesNotDoAnything/tests")
     target_link_libraries(
         ${TARGET_NAME}
         ${DEPENDENCIES}
@@ -78,7 +77,7 @@ if (BUILD_TESTING)
     enable_testing()
     create_test(baseEntityTest ./tests/baseEntityTest.cpp ${KGEPROJECT_LIBS})
     create_test(typeTriggerTest ./tests/typeTriggerTest.cpp ${KGEPROJECT_LIBS})
-    create_test(pointTest ./tests/pointTest.cpp ${KGEPROJECT_LIBS})
+    create_test(pointLineTest ./tests/pointLineTest.cpp ${KGEPROJECT_LIBS})
     create_test(mainLoopTest ./tests/mainLoopTest.cpp ${KGEPROJECT_LIBS})
     create_test(sysem_entCompHandlerTest ./tests/sysem_entCompHandlerTest.cpp ${KGEPROJECT_LIBS})
 endif (BUILD_TESTING)

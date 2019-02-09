@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2019 Kiyo Matsui
-KiyosGameEngine v0.7
+KiyosGameEngine v0.73
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -20,7 +20,7 @@ http://www.apache.org/licenses/
 #include <SFML/Graphics.hpp>
 
 #include "kgeMainLoop.h"
-#include "kgePoint.h"
+#include "kgePointLine.h"
 #include "kgeECS.h"
 
 class createdEntity;
@@ -63,17 +63,16 @@ public:
       if(i.get()) {
         if (position.getItem(i->ID)
           && body.getItem(i->ID)) {
-        bool killFlag = false;
-        //bodyPtr->velocity *= 0.5;
-        //bodyPtr->acceleration *= dt;
-        bodyPtr->velocity += bodyPtr->acceleration;
-        (*posPtr).x += (bodyPtr->velocity.x * dt);
-        (*posPtr).y += (bodyPtr->velocity.y * dt);
+          bool killFlag = false;
+          bodyPtr->velocity *= 0.5;
+          bodyPtr->velocity += (bodyPtr->acceleration * dt);
+          *posPtr += bodyPtr->velocity * dt;
 
         if ((posPtr->x  < 10 && bodyPtr->velocity.x < 0)
             || (posPtr->x > screenSize.x-10 && bodyPtr->velocity.x > 0)) {
           if (r0(rng) > 1) {
             (*bodyPtr).velocity.x *= -1;
+            (*bodyPtr).acceleration.x *= -2;
           } else
             killFlag = true;
         }
@@ -81,6 +80,7 @@ public:
             || (posPtr->y > screenSize.y-10 && bodyPtr->velocity.y > 0)) {
           if (r0(rng) > 1) {
             (*bodyPtr).velocity.y *= -1;
+            (*bodyPtr).acceleration.y *= -2;
           } else
             killFlag = true;
           }
@@ -153,7 +153,7 @@ class mainEntity : public kge::baseEntity {
 public:
   mainEntity(int a) : exampleData(a) {}
   
-  int exampleData;
+   int exampleData;
 };
 
 class createdEntity : public kge::baseEntity {
@@ -193,9 +193,9 @@ public:
       std::uniform_real_distribution<double> r0(10, screenSize.x-10);
       std::uniform_real_distribution<double> r1(10, screenSize.y-10);
       std::uniform_real_distribution<float> r2(0,360); 
-      std::uniform_real_distribution<float> r3(-200,200); 
+      std::uniform_real_distribution<float> r3(-2000,2000); 
       position.getItem(i) = std::make_unique<kge::point<double>>(j.x, j.y);
-      body.getItem(i) = std::make_unique<bodyData>(1.0, r3(rng), r3(rng), r3(rng), r3(rng));
+      body.getItem(i) = std::make_unique<bodyData>(1.0, r3(rng), r3(rng), 0.0, 0.0);
       meteor.getItem(i) = std::make_unique<sf::ConvexShape>();
       meteor.getItem(i)->setPointCount(5);
       meteor.getItem(i)->setPoint(0, sf::Vector2f(10, 0));
@@ -312,9 +312,9 @@ class gameState : public kge::abstractState {
       std::uniform_real_distribution<double> r0(10, aPtr->getSize().x-10);
       std::uniform_real_distribution<double> r1(10, aPtr->getSize().y-10);
       std::uniform_real_distribution<float> r2(0,360); 
-      std::uniform_real_distribution<float> r3(-200,200); 
+      std::uniform_real_distribution<float> r3(-2000,2000); 
       position.getItem(i) = std::make_unique<kge::point<double>>(r0(rng), r1(rng));
-      body.getItem(i) = std::make_unique<bodyData>(1.0, r3(rng), r3(rng), r3(rng), r3(rng));
+      body.getItem(i) = std::make_unique<bodyData>(1.0, r3(rng), r3(rng), 0.0, 0.0);
       meteor.getItem(i) = std::make_unique<sf::ConvexShape>();
       meteor.getItem(i)->setPointCount(5);
       meteor.getItem(i)->setPoint(0, sf::Vector2f(10, 0));

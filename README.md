@@ -8,7 +8,7 @@ Just include the kge header files in your project to include kge. Examples and t
 The best way to see how kge works is to view the example and perhaps the tests.
 
  
-The kgePoint header is a simple implementation of a 2D point with overloaded operators that act on two fundamental types 'x' and 'y'. The type of x and y is defined by the template parameter. 
+The kgePointLine header is a simple implementation of a 2D point class with overloaded operators that act on two fundamental types 'x' and 'y'. Also, a line class that has two points as members is inlcuded that has a useful intersect method. The type of x and y for both point and line is defined by the template parameter. 
 
  
 The kgeMainLoop header holds a main game loop and a state stack. Create a number of states that inherit from kge::abstractState and write implementations for the update(),render(), and processEvents() virtual functions. Both update and render are called with “double dt” which provides a double with a change in time between the loops in seconds. The kgeMainLoop class handles changing state, by switching/pushing/poping and “double popping” states (e.g. a pause dialog state with a quit option may be pushed on top of a game state; to quit the game, both states will need to be pushed). These are implemented as class method templates where the state and all its constructor argument types are passed as parameters. Arguments to the call are passed by value and can hold pointers to resources or data and any other important singleton objects such as an OS window instance.
