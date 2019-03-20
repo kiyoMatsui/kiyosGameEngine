@@ -23,6 +23,7 @@ class threadPool {
 public:
   threadPool() {
     for (unsigned i = 0; i < N; ++i) {
+      
       threads.emplace_back([=]() {
         for (;;) {
           m.lock();
@@ -32,7 +33,7 @@ public:
               break;
             std::this_thread::yield();
           } else {
-            std::function<void()> job = jobQueue.back();
+            std::function<void()> job = jobQueue.front();
             jobQueue.pop();
             m.unlock();
             job();
@@ -43,15 +44,29 @@ public:
   }
 
   ~threadPool() {
-    killFlag.store(true);
+    killFlag.exchange(true);
     for (auto &n : threads) {
       n.join();
     }
   }
 
-  template <typename FunctionType> void submit(FunctionType functor) {
+  template <typename FunctionType> void submitJob(FunctionType functor) {
     std::lock_guard<std::mutex> lock(m);
     jobQueue.push(std::function<void()>(functor));
+  }
+  
+  bool tryJob() {
+    m.lock();
+    if (jobQueue.empty()) {
+      m.unlock();
+      return false;
+    } else {
+      std::function<void()> job = jobQueue.front();
+      jobQueue.pop();
+      m.unlock();
+      job();
+      return true;
+    }
   }
 
 private:
@@ -59,7 +74,6 @@ private:
   std::vector<std::thread> threads;
   mutable std::mutex m;
   std::atomic_bool killFlag = false;
-  unsigned int threadCount = N;
 };
 
 } // namespace kge

@@ -100,6 +100,12 @@ template <typename T> class point {
     this->y /= arg1;
     return *this;
   }
+
+  T length(const point<T> &arg1)  {
+    kgeTestPrint("called length");
+    point<T> a = *this - arg1;
+    return (std::hypot(a.x, a.y));
+  }  
 };
 
 template <typename T>

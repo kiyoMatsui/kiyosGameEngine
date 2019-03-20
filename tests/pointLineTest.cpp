@@ -80,6 +80,12 @@ TEST_CASE("test int /= ") {
   REQUIRE(b.y == 132);
 }
 
+TEST_CASE("test int length ") {
+  kge::point<int> a(11, 22);
+  kge::point<int> b(2, 3);
+  REQUIRE(b.length(a) == 21);
+}
+
 TEST_CASE("test int + operator") {
   kge::point<int> a(11, 22);
   kge::point<int> b(10, 20);
