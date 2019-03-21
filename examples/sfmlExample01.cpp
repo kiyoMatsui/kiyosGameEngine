@@ -1,6 +1,10 @@
 /*-------------------------------*\
 Copyright 2019 Kiyo Matsui
+<<<<<<< HEAD:examples/sfmlExample01.cpp
 KiyosGameEngine v0.73
+=======
+KiyosGameEngine v0.74
+>>>>>>> kiyodev:examples/sfmlExample01.cpp
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
