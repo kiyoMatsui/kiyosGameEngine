@@ -1,10 +1,6 @@
 /*-------------------------------*\
 Copyright 2019 Kiyo Matsui
-<<<<<<< HEAD
-KiyosGameEngine v0.73
-=======
 KiyosGameEngine v0.74
->>>>>>> kiyodev
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -84,21 +80,12 @@ TEST_CASE("test int /= ") {
   REQUIRE(b.y == 132);
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> kiyodev
 TEST_CASE("test int length ") {
   kge::point<int> a(11, 22);
   kge::point<int> b(2, 3);
   REQUIRE(b.length(a) == 21);
 }
 
-<<<<<<< HEAD
->>>>>>> kiyodev
-=======
->>>>>>> kiyodev
 TEST_CASE("test int + operator") {
   kge::point<int> a(11, 22);
   kge::point<int> b(10, 20);

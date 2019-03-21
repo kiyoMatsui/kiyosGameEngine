@@ -1,14 +1,6 @@
 /*-------------------------------*\
 Copyright 2019 Kiyo Matsui
-<<<<<<< HEAD:kge/kgePointLine.h
-<<<<<<< HEAD:kge/kgePointLine.h
-KiyosGameEngine v0.73
-=======
 KiyosGameEngine v0.74
->>>>>>> kiyodev:kge/kgePointLine.h
-=======
-KiyosGameEngine v0.74
->>>>>>> kiyodev:kge/kgePointLine.h
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -108,18 +100,12 @@ template <typename T> class point {
     this->y /= arg1;
     return *this;
   }
-<<<<<<< HEAD:kge/kgePointLine.h
-=======
 
   T length(const point<T> &arg1)  {
     kgeTestPrint("called length");
     point<T> a = *this - arg1;
     return (std::hypot(a.x, a.y));
   }  
-<<<<<<< HEAD:kge/kgePointLine.h
->>>>>>> kiyodev:kge/kgePointLine.h
-=======
->>>>>>> kiyodev:kge/kgePointLine.h
 };
 
 template <typename T>

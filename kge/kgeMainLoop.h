@@ -1,14 +1,6 @@
 /*-------------------------------*\
 Copyright 2019 Kiyo Matsui
-<<<<<<< HEAD
-<<<<<<< HEAD
-KiyosGameEngine v0.73
-=======
 KiyosGameEngine v0.74
->>>>>>> kiyodev
-=======
-KiyosGameEngine v0.74
->>>>>>> kiyodev
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
