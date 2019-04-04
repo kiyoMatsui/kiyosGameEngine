@@ -105,7 +105,7 @@ template <typename T> class point {
     kgeTestPrint("called length");
     point<T> a = *this - arg1;
     return (std::hypot(a.x, a.y));
-  }  
+  }
 };
 
 template <typename T>
