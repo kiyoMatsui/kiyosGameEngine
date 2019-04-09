@@ -6,7 +6,6 @@ Version 2.0, January 2004
 http://www.apache.org/licenses/
 \*-------------------------------*/
 
-#include <iostream>
 #include <cmath>
 #include <unordered_set>
 #include <memory>
@@ -400,10 +399,7 @@ class gameState : public kge::abstractState {
   ~gameState() {}
   
   void update(double dt) {
-    auto start = std::chrono::high_resolution_clock::now();
     mMoveSystem.update(dt);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end-start).count() << " microseconds\n";
     mSpawnSystem.update(dt);
     mCleanupSystem.update(dt);
   }

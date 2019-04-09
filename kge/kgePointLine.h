@@ -101,7 +101,7 @@ template <typename T> class point {
     return *this;
   }
 
-  T length(const point<T> &arg1)  {
+  T length(const point<T> &arg1) const {
     kgeTestPrint("called length");
     point<T> a = *this - arg1;
     return (std::hypot(a.x, a.y));
@@ -222,7 +222,7 @@ template <typename T> class line {
     kgeTestPrint("called line copy constructor");
   }
 
-  T length()  {
+  T length() const {
     kgeTestPrint("called intersect");
     point<T> a = A - B;
     return (std::hypot(a.x, a.y));

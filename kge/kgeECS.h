@@ -156,7 +156,7 @@ public:
   const unsigned int ID;
 
 private:
-  unsigned int getNewID() { return newID_AndNoOfMaxEntities++; }
+  unsigned int getNewID() const { return newID_AndNoOfMaxEntities++; }
 
 private:
   static inline unsigned int newID_AndNoOfMaxEntities = 0;

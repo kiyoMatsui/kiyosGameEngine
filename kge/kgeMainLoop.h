@@ -43,9 +43,9 @@ public:
   template <typename pushedState, typename... Elements>
   void switchState(Elements... args);
 
-  abstractState *peekState() { return stateStack.back().get(); }
+  abstractState *peekState() const { return stateStack.back().get(); }
 
-  abstractState *peekUnderState() { return stateStack.rbegin()[1].get(); }
+  abstractState *peekUnderState() const { return stateStack.rbegin()[1].get(); }
 
   void run() {
     auto start = std::chrono::steady_clock::now();
