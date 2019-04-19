@@ -140,6 +140,7 @@ public:
   std::unique_ptr<component> &getItem(unsigned int a) {
     if (baseEntity::getMaxEntities() > container.size()) {
       int newSize = (int)baseEntity::getMaxEntities() - (int)container.size();
+      // vector reserve here might be faster
       for (auto n = 0; n < newSize; n++) {
         container.push_back(nullptr);
       }
