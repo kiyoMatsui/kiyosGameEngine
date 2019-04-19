@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2019 Kiyo Matsui
-KiyosGameEngine v0.74
+KiyosGameEngine v0.8
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -64,29 +64,6 @@ TEST_CASE("simple build") {
     REQUIRE(a->idBin[0] == 3);
     REQUIRE(a->idBin[1] == 0);
     REQUIRE(a->idBin[2] == 4);
-  }
-}
-
-TEST_CASE("swap and pop case") {
-  
-  std::vector<std::shared_ptr<kge::baseEntity>> cont;
-  for(int i = 0; i < 10; i++) {
-    auto a = std::make_shared<testBaseEntity1>();
-  cont.push_back(a);
-  }
-  REQUIRE(cont.size() == 10);
-  REQUIRE(cont[0]->ID == 4);
-
-  for(auto iter=cont.begin(); iter!=cont.end();) {     
-    if((*iter)->ID == 3) {
-      REQUIRE((*iter)->ID == 3);
-      std::swap(*iter, cont.back());
-      cont.pop_back();
-      REQUIRE((*iter)->ID == 11);
-    } else {
-      //dothings
-      iter++;
-    }
   }
 }
 

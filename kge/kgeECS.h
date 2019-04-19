@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2019 Kiyo Matsui
-KiyosGameEngine v0.74
+KiyosGameEngine v0.8
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -140,6 +140,7 @@ public:
   std::unique_ptr<component> &getItem(unsigned int a) {
     if (baseEntity::getMaxEntities() > container.size()) {
       int newSize = (int)baseEntity::getMaxEntities() - (int)container.size();
+      // vector reserve here might be faster
       for (auto n = 0; n < newSize; n++) {
         container.push_back(nullptr);
       }
@@ -156,7 +157,7 @@ public:
   const unsigned int ID;
 
 private:
-  unsigned int getNewID() { return newID_AndNoOfMaxEntities++; }
+  unsigned int getNewID() const { return newID_AndNoOfMaxEntities++; }
 
 private:
   static inline unsigned int newID_AndNoOfMaxEntities = 0;

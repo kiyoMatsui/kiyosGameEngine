@@ -1,18 +1,18 @@
 /*-------------------------------*\
 Copyright 2019 Kiyo Matsui
-KiyosGameEngine v0.74
+KiyosGameEngine v0.8
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
 \*-------------------------------*/
 
-#include <iostream>
 #include <cmath>
 #include <unordered_set>
 #include <memory>
 #include <string>
 #include <vector>
 #include <random>
+#include <shared_mutex>
 
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
@@ -21,6 +21,7 @@ http://www.apache.org/licenses/
 #include "kgeMainLoop.h"
 #include "kgePointLine.h"
 #include "kgeECS.h"
+#include "kgeThreadPool.h"
 
 class createdEntity;
 
@@ -38,6 +39,7 @@ public:
   double mass;
   kge::point<double> acceleration;
   kge::point<double> velocity;
+  std::shared_mutex sm;
 };
 
 class movementSystem : public kge::system {
@@ -45,42 +47,50 @@ public:
   movementSystem(sf::RenderWindow* const aPtr,
                  kge::entCompHandler<kge::baseEntity>& aEntities,
                  kge::entCompHandler<kge::point<double>>& aPosition,
-                 kge::entCompHandler<bodyData>& aBody ) 
+                 kge::entCompHandler<bodyData>& aBody,
+                 kge::threadPool<4>* const atpPtr ) 
     : screenSize(aPtr->getSize().x, aPtr->getSize().y)
     , entities(aEntities)
     , position(aPosition)
-    , body(aBody) { }
+    , body(aBody)
+    , mTpPtr(atpPtr) { }
 
-  
-  int update(double dt) override {
-  #define posPtr position.getItem(i->ID)
-  #define bodyPtr body.getItem(i->ID)
-  std::random_device rnd;
-  std::mt19937 rng(rnd());
-  std::uniform_int_distribution<int> r0(0,9);
-  for ( auto& i : entities.container) {
-      if(i.get()) {
-        if (position.getItem(i->ID)
-          && body.getItem(i->ID)) {
-          bool killFlag = false;
+ 
+  void updateBlock(double dt,
+                   const int size,
+                   const int threadNo,
+                   bool endFlag = false) {
+    #define posPtr position.getItem((*iter)->ID)
+    #define bodyPtr body.getItem((*iter)->ID)
+    std::random_device rnd; 
+    std::mt19937 rng(rnd());
+    std::uniform_int_distribution<int> r0(0,9);
+    int block = size * threadNo;
+    auto iterEnd=entities.container.begin() + block + size;
+    if(endFlag == true) iterEnd=entities.container.end(); 
+    for (auto iter=entities.container.begin() + block; iter!=iterEnd; iter++) {
+      if(iter->get()) {
+        if (position.getItem((*iter)->ID)
+            && body.getItem((*iter)->ID)) {
+          bool killFlag = false; 
           bodyPtr->velocity *= 0.5;
           bodyPtr->velocity += (bodyPtr->acceleration * dt);
-          for ( auto& i2 : entities.container) {
-            if(i2.get()) {
-              if (position.getItem(i2->ID)) {
-                kge::line temp(*posPtr, *position.getItem(i2->ID));
-                if (temp.length() < 20.0 && i2 != i) {
-                  kge::point<double> directionVec = *posPtr - *position.getItem(i2->ID);    
+          for (auto iter2=entities.container.begin(); iter2!=entities.container.end(); iter2++) {
+            if(iter2->get()) {
+              if (copyCont[(*iter2)->ID].get() && (*iter2)->ID != (*iter)->ID) {  
+                kge::line temp(*copyCont[(*iter)->ID], *copyCont[(*iter2)->ID]);
+                if (temp.length() < 20.0) {
+                  kge::point<double> directionVec = *copyCont[(*iter)->ID] - *copyCont[(*iter2)->ID];
                   bodyPtr->velocity += ((directionVec /= std::hypot(directionVec.x, directionVec.y)) * (1000/temp.length()));
-                  //bodyPtr->acceleration = (bodyPtr->velocity);
                 }
               }
-            }
-          }          
+            } 
+          }
           if (std::hypot(bodyPtr->velocity.x, bodyPtr->velocity.y) > 100.0) {
             bodyPtr->velocity /= std::hypot(bodyPtr->velocity.x, bodyPtr->velocity.y);
             bodyPtr->velocity *= 100.0;
-          }          
+          }   
+
           *posPtr += bodyPtr->velocity * dt;
           if ((posPtr->x  < 10 && bodyPtr->velocity.x < 0)
               || (posPtr->x > screenSize.x-10 && bodyPtr->velocity.x > 0)) {
@@ -98,19 +108,57 @@ public:
             } else
               killFlag = true;
           }
-          if(killFlag) entities.getItem(i->ID).reset(nullptr);
-        }
+          if(killFlag) {
+            std::lock_guard<std::mutex> lock(mKillSetMutex);
+            mKillSet.insert((*iter)->ID);
+          }
+        } 
       }
     }
+  sync--;
+  }
+  
+  int update(double dt) override {
+    copyCont.clear();
+    copyCont.reserve(position.container.size());
+    for (const auto& e : position.container) {
+      if (e.get()) {
+        copyCont.push_back(std::make_unique<kge::point<double>>(*e));
+      } else {
+        copyCont.push_back(nullptr);
+      }
+    }
+
+    unsigned int block = (unsigned int)entities.container.size() / 4;
+    for ( int x = 0; x < 3; x++ ) {
+      sync++;
+      mTpPtr->submitJob([=](){ updateBlock(dt,block,x); });
+    }
+    sync++;
+    updateBlock(dt,block,3,true);
+
+    while (sync.load() != 0) {
+      std::this_thread::yield();
+    }
+    for (auto a : mKillSet) {
+      entities.getItem(a).reset(nullptr);
+    }
+    mKillSet.clear();
+    var = 0;
     return 1;
   }
-
 
  private:
   kge::point<double> screenSize;
   kge::entCompHandler<kge::baseEntity>& entities;
   kge::entCompHandler<kge::point<double>>& position;
   kge::entCompHandler<bodyData>& body;
+  kge::threadPool<4>* const mTpPtr;
+  std::unordered_set<unsigned int> mKillSet;
+  mutable std::mutex mKillSetMutex;
+  std::atomic_int sync = 0;
+  std::atomic_int var = 0;
+  std::vector<std::unique_ptr<kge::point<double>>> copyCont;
 };
 
 class renderSystem : public kge::system {
@@ -137,13 +185,13 @@ public:
       }
       createdMeteorIDs.clear();
     }
-    #define posPtr position.getItem(i->ID)
-    #define meteorPtr meteor.getItem(i->ID)
+  #define posPtr2 position.getItem(i->ID)
+  #define meteorPtr meteor.getItem(i->ID)
     for ( auto& i : entities.container) {
       if(i.get()) {
         if (position.getItem(i->ID)
           && meteor.getItem(i->ID)) {
-          meteorPtr->setPosition((float)posPtr->x, (float)posPtr->y);
+          meteorPtr->setPosition((float)posPtr2->x, (float)posPtr2->y);
           wPtr->draw(*meteorPtr);
         }
       }
@@ -309,13 +357,16 @@ default:
 
 class gameState : public kge::abstractState {
  public:
-  gameState(sf::RenderWindow* const aPtr, kge::mainLoop* const mainLoopPtr)
+  gameState(sf::RenderWindow* const aPtr,
+            kge::mainLoop* const mainLoopPtr,
+            kge::threadPool<4>* const atpPtr)
   : wPtr(aPtr)
   , mMainLoopPtr(mainLoopPtr)
+  , mTpPtr(atpPtr)  
   , position()
   , body()
   , meteor()
-  , mMoveSystem(aPtr, entities, position, body)
+  , mMoveSystem(aPtr, entities, position, body, atpPtr)
   , mRenderSystem(aPtr, entities, position, meteor)
   , mSpawnSystem(aPtr, entities, position, body, meteor)
   , mCleanupSystem(entities, position, body, meteor) {
@@ -348,12 +399,7 @@ class gameState : public kge::abstractState {
   ~gameState() {}
   
   void update(double dt) {
-    auto start = std::chrono::high_resolution_clock::now();
     mMoveSystem.update(dt);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end-start).count()
-              << " microseconds\n";
-    
     mSpawnSystem.update(dt);
     mCleanupSystem.update(dt);
   }
@@ -386,13 +432,14 @@ class gameState : public kge::abstractState {
   }
  
   void render(double dt) {
-    wPtr->clear(sf::Color::Black); 
+    wPtr->clear(sf::Color::Black);
     mRenderSystem.update(dt);
     wPtr->display();
   }
 
   sf::RenderWindow* const wPtr;
   kge::mainLoop* const mMainLoopPtr;
+  kge::threadPool<4>* const mTpPtr;
   kge::entCompHandler<kge::baseEntity> entities;
   kge::entCompHandler<kge::point<double>> position;
   kge::entCompHandler<bodyData> body;
@@ -409,9 +456,12 @@ class gameState : public kge::abstractState {
 
 class menuState : public kge::abstractState {
  public:
-  menuState(sf::RenderWindow* const aPtr, kge::mainLoop* const mainLoopPtr)
+  menuState(sf::RenderWindow* const aPtr,
+            kge::mainLoop* const mainLoopPtr,
+            kge::threadPool<4>* const atpPtr)
   : wPtr(aPtr)
-  , mMainLoopPtr(mainLoopPtr) {
+  , mMainLoopPtr(mainLoopPtr)
+  , mTpPtr(atpPtr) {
     if(!font.loadFromFile("../thirdParty/LiberationSans-Regular.ttf")) {
       font.loadFromFile("thirdParty/LiberationSans-Regular.ttf");
     }
@@ -437,7 +487,10 @@ class menuState : public kge::abstractState {
           break;
         case sf::Event::KeyPressed:
           if (event.key.code == sf::Keyboard::Space) {
-          mMainLoopPtr->switchState<gameState, sf::RenderWindow* const, kge::mainLoop* const>(wPtr, mMainLoopPtr);
+          mMainLoopPtr->switchState<gameState,
+                                    sf::RenderWindow* const,
+                                    kge::mainLoop* const,
+                                    kge::threadPool<4>* const>(wPtr, mMainLoopPtr, mTpPtr);
           }
           if (event.key.code == sf::Keyboard::Escape) {
           mMainLoopPtr->popState();
@@ -457,6 +510,7 @@ class menuState : public kge::abstractState {
   
   sf::RenderWindow* const wPtr;
   kge::mainLoop* mMainLoopPtr;
+  kge::threadPool<4>* const mTpPtr;
   sf::Font font;
   sf::Text text;          
 };
@@ -465,11 +519,15 @@ int main() {
   sf::RenderWindow mWindow(sf::VideoMode(800, 600), "kge example");
   mWindow.setFramerateLimit(60);
   mWindow.setVerticalSyncEnabled(true);
+  kge::threadPool<4> mThreadPool;
   sf::RenderWindow* const mPtr = &mWindow;
+  kge::threadPool<4>* const tpPtr = &mThreadPool;
   kge::mainLoop myGame;
   kge::mainLoop* const gPtr = &myGame;
-  
-  myGame.pushState<menuState, sf::RenderWindow* const, kge::mainLoop* const>(mPtr, gPtr);
+  myGame.pushState<menuState,
+                   sf::RenderWindow* const,
+                   kge::mainLoop* const,
+                   kge::threadPool<4>* const>(mPtr, gPtr, tpPtr);
   myGame.run();
 
   return 0;

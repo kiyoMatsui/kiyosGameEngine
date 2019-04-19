@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2019 Kiyo Matsui
-KiyosGameEngine v0.74
+KiyosGameEngine v0.8
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -101,11 +101,11 @@ template <typename T> class point {
     return *this;
   }
 
-  T length(const point<T> &arg1)  {
+  T length(const point<T> &arg1) const {
     kgeTestPrint("called length");
     point<T> a = *this - arg1;
     return (std::hypot(a.x, a.y));
-  }  
+  }
 };
 
 template <typename T>
@@ -222,7 +222,7 @@ template <typename T> class line {
     kgeTestPrint("called line copy constructor");
   }
 
-  T length()  {
+  T length() const {
     kgeTestPrint("called intersect");
     point<T> a = A - B;
     return (std::hypot(a.x, a.y));
