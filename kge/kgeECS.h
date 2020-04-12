@@ -24,66 +24,10 @@ http://www.apache.org/licenses/
 
 namespace kge {
 
-class abstractTrigger {
-public:
-  virtual ~abstractTrigger() {}
-  virtual void trigger() = 0;
-  virtual bool reset() = 0;
-  virtual bool check() = 0;
-};
-
-template <typename T> class typeTrigger : public abstractTrigger {
-public:
-  virtual void trigger() override { button = true; }
-
-  virtual bool check() override { return button; }
-
-  virtual bool reset() override {
-    if (button == false) {
-      return false;
-    } else {
-      button = false;
-      return true;
-    }
-  }
-
-private:
-  friend T;
-  static inline bool button = false;
-};
-
-template <typename T>
-class typeTriggerStack  {
- public:
-  void trigger(unsigned int a)  {
-    stack.push_back(a);
-  }
-  bool check()  {
-    return !stack.empty();
-  }
-  std::vector<unsigned int>& get() {
-    return stack;
-  }
-  bool reset()  {
-    if(stack.empty()) {
-      return false;
-    } else {
-      return true;
-      stack.clear();
-    }
-  }
- 
- private:
-  friend T;
-  static inline std::vector<unsigned int> stack;
-};
-
 class baseEntity {
 public:
   virtual ~baseEntity() {
     freshBin.push_back(ID);
-    typeTrigger<baseEntity> deathTrigger;
-    deathTrigger.trigger();
   }
 
   baseEntity() : ID(getNewID()) {}
@@ -97,8 +41,7 @@ public:
       idBin.push_back(freshBin.back());
       freshBin.pop_back();
     }
-    typeTrigger<baseEntity> deathTrigger;
-    deathTrigger.reset();
+
   }
 
   static unsigned int getNextID() {

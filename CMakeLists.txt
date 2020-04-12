@@ -1,9 +1,9 @@
 ## Project Properties
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.5)
 PROJECT(kiyosGameEngine)
 
 SET(APPLICATION_NAME "kiyosGameEngine")
-SET(APPLICATION_VERSION_STRING 0.7)
+SET(APPLICATION_VERSION_STRING 0.81)
 
 ## Project Output Paths
 SET(MAINFOLDER ${PROJECT_SOURCE_DIR})
@@ -36,13 +36,13 @@ endif()
 INCLUDE(CxxFlags)
 
 #debug
-#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG} -std=c++1z -pthread")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG} -std=c++1z -pthread")
 
 #thread sanitizer
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -fsanitize=thread -g -O1")
 
 #release
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -std=c++1z -pthread")
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -std=c++1z -pthread")
 
 
 set(BUILD_TESTING true CACHE BOOL "Enable building of tests.")
@@ -50,6 +50,8 @@ set(BUILD_TESTING true CACHE BOOL "Enable building of tests.")
 ## Creating Binaries for examples
 if(SFML_FOUND)
 SET(KGEPROJECT_LIBS ${CMAKE_DL_LIBS} ${SFML_LIBRARIES} )
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 SET(EXAMPLE1_NAME "sfmlExample01")
 SET(EXAMPLE1_BIN ${EXAMPLE1_NAME})
@@ -83,7 +85,6 @@ if (BUILD_TESTING)
     ADD_LIBRARY(catchMain ./tests/00CatchMain.cpp)
     enable_testing()
     create_test(baseEntityTest ./tests/baseEntityTest.cpp ${KGEPROJECT_LIBS})
-    create_test(typeTriggerTest ./tests/typeTriggerTest.cpp ${KGEPROJECT_LIBS})
     create_test(pointLineTest ./tests/pointLineTest.cpp ${KGEPROJECT_LIBS})
     create_test(mainLoopTest ./tests/mainLoopTest.cpp ${KGEPROJECT_LIBS})
     create_test(sysem_entCompHandlerTest ./tests/sysem_entCompHandlerTest.cpp ${KGEPROJECT_LIBS})

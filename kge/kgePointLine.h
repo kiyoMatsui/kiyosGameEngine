@@ -35,15 +35,17 @@ template <typename T> class point {
   point(const point<T> &arg1) : x(arg1.x), y(arg1.y) {
     kgeTestPrint("called copy constructor");
   }
+  point<T> &operator=(const point<T> &arg1) {
+    kgeTestPrint("called copy assignment =");
+    this->x = arg1.x;
+    this->y = arg1.y;
+  }
+
+  point<T>(point<T> &&other) noexcept = default;
+  point<T>& operator=(point<T> &&other) noexcept = default;
   
   T x;
   T y;
-
- public:
-  point<T> operator=(const point<T> &arg1) {
-    kgeTestPrint("called operator =");
-    return point<T>((this->x = arg1.x), (this->y = arg1.y));
-  }
 
   point<T> &operator+=(const point<T> &arg1) {
     kgeTestPrint("called operator +=");
@@ -221,6 +223,13 @@ template <typename T> class line {
   line(const line<T> &arg1) : A(arg1.A), B(arg1.B), recentIntersection(arg1.A) {
     kgeTestPrint("called line copy constructor");
   }
+  line<T>& operator=(const line<T> &arg1) { 
+    kgeTestPrint("called line copy assignment");
+    this->A = arg1.A;
+    this->B = arg1.B;
+  }
+  line<T>(line &&other) noexcept = default;
+  line<T>& operator=(line<T> &&other) noexcept = default;
 
   T length() const {
     kgeTestPrint("called intersect");

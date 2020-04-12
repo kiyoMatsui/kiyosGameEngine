@@ -26,7 +26,9 @@ public:
 
 class mainLoop {
 public:
-  mainLoop() : stateStack(), changeStatePtr(nullptr) {}
+  mainLoop(std::size_t stackSizeReserve = 5) : stateStack(), changeStatePtr(nullptr) {
+    stateStack.reserve(stackSizeReserve);  
+}
 
   template <typename pushedState, typename... Elements>
   void pushState(Elements... args);
@@ -40,6 +42,7 @@ public:
     changeStatePtr = std::make_unique<std::function<void()>>(
         [=] { mainLoop::popPopStack(); });
   }
+  
   template <typename pushedState, typename... Elements>
   void switchState(Elements... args);
 
@@ -69,8 +72,10 @@ public:
   }
 
 private:
-  mainLoop(const mainLoop &) = delete;
-  mainLoop &operator=(const mainLoop &) = delete;
+  mainLoop(const mainLoop &other) = delete;
+  mainLoop &operator=(const mainLoop &other) = delete;
+  mainLoop(mainLoop &&other) noexcept = delete;
+  mainLoop &operator=(mainLoop &&other) noexcept = delete;
 
   template <typename pushedState, typename... Elements>
   void pushToStack(Elements... args);

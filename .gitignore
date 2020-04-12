@@ -1,3 +1,6 @@
+/s
+/bin
+*.user
 # Prerequisites
 *.d
 

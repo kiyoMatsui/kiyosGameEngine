@@ -42,7 +42,11 @@ public:
       });
     }
   }
-
+  
+  threadPool(const threadPool &other) = delete;
+  threadPool &operator=(const threadPool &other) = delete;
+  threadPool(threadPool &&other) noexcept = delete;
+  threadPool &operator=(threadPool &&other) noexcept = delete;
   ~threadPool() {
     killFlag.exchange(true);
     for (auto &n : threads) {
@@ -68,7 +72,7 @@ public:
       return true;
     }
   }
-
+  
 private:
   std::queue<std::function<void()>> jobQueue;
   std::vector<std::thread> threads;

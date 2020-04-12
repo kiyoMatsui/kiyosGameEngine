@@ -44,8 +44,6 @@ public:
   ~testState1() { kgeTestPrint("destructor testState1"); }
   void update(double a) {
     a++;
-    kgeTestPrint("press enter to run first tests");
-    std::cin.ignore();
     INFO("checking correct state is sent");
     REQUIRE(dynamic_cast<testState1 *>(mMainLoopPtr->peekState())->counter ==
             1);
@@ -69,8 +67,6 @@ public:
   ~testState2() { kgeTestPrint("destructor testState2"); }
   void update(double a) {
     a++;
-    kgeTestPrint("press enter to run second tests");
-    std::cin.ignore();
     INFO("checking correct state is sent");
     REQUIRE(dynamic_cast<testState2 *>(mMainLoopPtr->peekState())->counter ==
             2);
@@ -94,8 +90,6 @@ public:
   ~testState3() { kgeTestPrint("destructor testState3"); }
   void update(double a) {
     a++;
-    kgeTestPrint("press enter to run third tests");
-    std::cin.ignore();
     INFO("checking correct state is sent");
     REQUIRE(dynamic_cast<testState3 *>(mMainLoopPtr->peekState())->counter ==
             3);
@@ -119,8 +113,6 @@ public:
   ~testState4() { kgeTestPrint("destructor testState4"); }
   void update(double a) {
     a++;
-    kgeTestPrint("press enter to run fourth tests");
-    std::cin.ignore();
     INFO("checking correct state is sent");
     REQUIRE(dynamic_cast<testState4 *>(mMainLoopPtr->peekState())->counter ==
             4);
