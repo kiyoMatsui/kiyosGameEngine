@@ -1,3 +1,9 @@
+/bin
+/build
+*.user
+cachegrind.out.*
+massif.out.*
+callgrind.out.*
 # Prerequisites
 *.d
 

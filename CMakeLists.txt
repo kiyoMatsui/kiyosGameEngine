@@ -1,9 +1,9 @@
 ## Project Properties
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.5)
 PROJECT(kiyosGameEngine)
 
 SET(APPLICATION_NAME "kiyosGameEngine")
-SET(APPLICATION_VERSION_STRING 0.7)
+SET(APPLICATION_VERSION_STRING 0.81)
 
 ## Project Output Paths
 SET(MAINFOLDER ${PROJECT_SOURCE_DIR})
@@ -17,8 +17,7 @@ INCLUDE_DIRECTORIES("${MAINFOLDER}/kge")
 INCLUDE_DIRECTORIES("${MAINFOLDER}/thirdParty/catch") #catch.hpp
 
 ## example project Sources
-FILE(GLOB_RECURSE EXAMPLE_SRCS01 ${MAINFOLDER}/examples/*01.cpp )
-FILE(GLOB_RECURSE EXAMPLE_SRCS02 ${MAINFOLDER}/examples/*02.cpp )
+FILE(GLOB_RECURSE EXAMPLE_SRCS ${MAINFOLDER}/examples/sfmlExample.cpp )
 
 ## Project Dependencies
 
@@ -36,14 +35,14 @@ endif()
 INCLUDE(CxxFlags)
 
 #debug
-#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG} -std=c++1z -pthread")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG} -std=c++17 -pthread")
 
 #thread sanitizer
-#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -fsanitize=thread -g -O1")
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fsanitize=thread -g -O1")
 
 #release
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -std=c++1z -pthread")
-
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -std=c++17 -pthread")
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -std=c++17 -march=native -pthread")
 
 set(BUILD_TESTING true CACHE BOOL "Enable building of tests.")
 
@@ -51,17 +50,15 @@ set(BUILD_TESTING true CACHE BOOL "Enable building of tests.")
 if(SFML_FOUND)
 SET(KGEPROJECT_LIBS ${CMAKE_DL_LIBS} ${SFML_LIBRARIES} )
 
-SET(EXAMPLE1_NAME "sfmlExample01")
-SET(EXAMPLE1_BIN ${EXAMPLE1_NAME})
-ADD_EXECUTABLE(${EXAMPLE1_BIN} ${MAINFOLDER}/examples/sfmlExample01.cpp ${EXAMPLE_SRCS01})
-
-SET(EXAMPLE2_NAME "sfmlExample02")
-SET(EXAMPLE2_BIN ${EXAMPLE2_NAME})
-ADD_EXECUTABLE(${EXAMPLE2_BIN} ${MAINFOLDER}/examples/sfmlExample02.cpp ${EXAMPLE_SRCS02})
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
-TARGET_LINK_LIBRARIES(${EXAMPLE1_BIN} ${KGEPROJECT_LIBS})
-TARGET_LINK_LIBRARIES(${EXAMPLE2_BIN} ${KGEPROJECT_LIBS})
+
+SET(EXAMPLE_NAME "sfmlExample")
+SET(EXAMPLE_BIN ${EXAMPLE_NAME})
+ADD_EXECUTABLE(${EXAMPLE_BIN} ${MAINFOLDER}/examples/sfmlExample.cpp ${EXAMPLE_SRCS})
+
+TARGET_LINK_LIBRARIES(${EXAMPLE_BIN} ${KGEPROJECT_LIBS})
 
 
 INSTALL(TARGETS ${EXAMPLE_BIN} DESTINATION bin)
@@ -80,12 +77,10 @@ macro(create_test TARGET_NAME SOURCE DEPENDENCIES)
 endmacro()
 
 if (BUILD_TESTING)
-    ADD_LIBRARY(catchMain ./tests/00CatchMain.cpp)
+    ADD_LIBRARY(catchMain ./test/00CatchMain.cpp)
     enable_testing()
-    create_test(baseEntityTest ./tests/baseEntityTest.cpp ${KGEPROJECT_LIBS})
-    create_test(typeTriggerTest ./tests/typeTriggerTest.cpp ${KGEPROJECT_LIBS})
-    create_test(pointLineTest ./tests/pointLineTest.cpp ${KGEPROJECT_LIBS})
-    create_test(mainLoopTest ./tests/mainLoopTest.cpp ${KGEPROJECT_LIBS})
-    create_test(sysem_entCompHandlerTest ./tests/sysem_entCompHandlerTest.cpp ${KGEPROJECT_LIBS})
-    create_test(threadPoolTest ./tests/threadPoolTest.cpp ${KGEPROJECT_LIBS})
+    create_test(pointLineTest ./test/pointLineTest.cpp ${KGEPROJECT_LIBS})
+    create_test(mainLoopTest ./test/mainLoopTest.cpp ${KGEPROJECT_LIBS})
+    create_test(ECSTest ./test/ECSTest.cpp ${KGEPROJECT_LIBS})
+    create_test(threadPoolTest ./test/threadPoolTest.cpp ${KGEPROJECT_LIBS})
 endif (BUILD_TESTING)
