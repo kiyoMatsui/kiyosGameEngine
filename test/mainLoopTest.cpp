@@ -1,13 +1,3 @@
-/*-------------------------------*\
-Copyright 2019 Kiyo Matsui
-KiyosGameEngine v0.8
-Apache License
-Version 2.0, January 2004
-http://www.apache.org/licenses/
-\*-------------------------------*/
-
-// test mainLoop
-
 #include "catch2/catch.hpp"
 
 #include <iostream>
@@ -37,16 +27,13 @@ class testData {
 };
 
 class testState1 : public kge::abstractState {
-public:
-  testState1(kge::mainLoop *mainLoopRef) : mMainLoopPtr(mainLoopRef) {
-    kgeTestPrint("constructor testState1");
-  }
+ public:
+  testState1(kge::mainLoop* mainLoopRef) : mMainLoopPtr(mainLoopRef) { kgeTestPrint("constructor testState1"); }
   ~testState1() { kgeTestPrint("destructor testState1"); }
   void update(double a) {
     a++;
     INFO("checking correct state is sent");
-    REQUIRE(dynamic_cast<testState1 *>(mMainLoopPtr->peekState())->counter ==
-            1);
+    REQUIRE(dynamic_cast<testState1*>(mMainLoopPtr->peekState())->counter == 1);
     INFO("checking correct stateStack size");
     REQUIRE(mMainLoopPtr->stateStack.size() == 1);
     REQUIRE(mMainLoopPtr->changeStatePtr == nullptr);
@@ -55,21 +42,18 @@ public:
   }
   void processEvents() {}
   void render(double a) { a++; }
-  kge::mainLoop *mMainLoopPtr;
+  kge::mainLoop* mMainLoopPtr;
   int counter = 1;
 };
 
 class testState2 : public kge::abstractState {
-public:
-  testState2(kge::mainLoop *mainLoopRef) : mMainLoopPtr(mainLoopRef) {
-    kgeTestPrint("constructor testState2");
-  }
+ public:
+  testState2(kge::mainLoop* mainLoopRef) : mMainLoopPtr(mainLoopRef) { kgeTestPrint("constructor testState2"); }
   ~testState2() { kgeTestPrint("destructor testState2"); }
   void update(double a) {
     a++;
     INFO("checking correct state is sent");
-    REQUIRE(dynamic_cast<testState2 *>(mMainLoopPtr->peekState())->counter ==
-            2);
+    REQUIRE(dynamic_cast<testState2*>(mMainLoopPtr->peekState())->counter == 2);
     INFO("checking correct stateStack size");
     REQUIRE(mMainLoopPtr->stateStack.size() == 1);
     REQUIRE(mMainLoopPtr->changeStatePtr == nullptr);
@@ -78,21 +62,18 @@ public:
   }
   void processEvents() {}
   void render(double a) { a++; }
-  kge::mainLoop *mMainLoopPtr;
+  kge::mainLoop* mMainLoopPtr;
   int counter = 2;
 };
 
 class testState3 : public kge::abstractState {
-public:
-  testState3(kge::mainLoop *mainLoopRef) : mMainLoopPtr(mainLoopRef) {
-    kgeTestPrint("constructor testState3");
-  }
+ public:
+  testState3(kge::mainLoop* mainLoopRef) : mMainLoopPtr(mainLoopRef) { kgeTestPrint("constructor testState3"); }
   ~testState3() { kgeTestPrint("destructor testState3"); }
   void update(double a) {
     a++;
     INFO("checking correct state is sent");
-    REQUIRE(dynamic_cast<testState3 *>(mMainLoopPtr->peekState())->counter ==
-            3);
+    REQUIRE(dynamic_cast<testState3*>(mMainLoopPtr->peekState())->counter == 3);
     INFO("checking correct stateStack size");
     REQUIRE(mMainLoopPtr->stateStack.size() == 1);
     REQUIRE(mMainLoopPtr->changeStatePtr == nullptr);
@@ -101,24 +82,19 @@ public:
   }
   void processEvents() {}
   void render(double a) { a++; }
-  kge::mainLoop *mMainLoopPtr;
+  kge::mainLoop* mMainLoopPtr;
   int counter = 3;
 };
 
 class testState4 : public kge::abstractState {
-public:
-  testState4(kge::mainLoop *mainLoopRef) : mMainLoopPtr(mainLoopRef) {
-    kgeTestPrint("constructor testState4");
-  }
+ public:
+  testState4(kge::mainLoop* mainLoopRef) : mMainLoopPtr(mainLoopRef) { kgeTestPrint("constructor testState4"); }
   ~testState4() { kgeTestPrint("destructor testState4"); }
   void update(double a) {
     a++;
     INFO("checking correct state is sent");
-    REQUIRE(dynamic_cast<testState4 *>(mMainLoopPtr->peekState())->counter ==
-            4);
-    REQUIRE(
-        dynamic_cast<testState3 *>(mMainLoopPtr->peekUnderState())->counter ==
-        3);
+    REQUIRE(dynamic_cast<testState4*>(mMainLoopPtr->peekState())->counter == 4);
+    REQUIRE(dynamic_cast<testState3*>(mMainLoopPtr->peekUnderState())->counter == 3);
     INFO("checking correct stateStack size");
     REQUIRE(mMainLoopPtr->stateStack.size() == 2);
     REQUIRE(mMainLoopPtr->changeStatePtr == nullptr);
@@ -127,7 +103,7 @@ public:
   }
   void processEvents() {}
   void render(double a) { a++; }
-  kge::mainLoop *mMainLoopPtr;
+  kge::mainLoop* mMainLoopPtr;
   int counter = 4;
 };
 
@@ -141,7 +117,7 @@ TEST_CASE("can construct") {
     REQUIRE(a.changeStatePtr == nullptr);
   }
 
-  SECTION("mote advanced tests") {
+  SECTION("more advanced tests") {
     a.pushState<testState2>(&a);
     a.run();
     REQUIRE(a.changeStatePtr == nullptr);

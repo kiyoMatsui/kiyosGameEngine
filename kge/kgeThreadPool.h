@@ -1,11 +1,3 @@
-/*-------------------------------*\
-Copyright 2019 Kiyo Matsui
-KiyosGameEngine v0.8
-Apache License
-Version 2.0, January 2004
-http://www.apache.org/licenses/
-\*-------------------------------*/
-
 #ifndef KGE_THREADPOOL
 #define KGE_THREADPOOL
 
@@ -18,19 +10,19 @@ http://www.apache.org/licenses/
 
 namespace kge {
 
-template <unsigned int N = 4> 
+template <unsigned int N = 4>
 class threadPool {
-public:
+ public:
   threadPool() {
     for (unsigned i = 0; i < N; ++i) {
-      
       threads.emplace_back([=]() {
         for (;;) {
           m.lock();
           if (jobQueue.empty()) {
             m.unlock();
-            if (killFlag)
+            if (killFlag) {
               break;
+            }
             std::this_thread::yield();
           } else {
             std::function<void()> job = jobQueue.front();
@@ -42,44 +34,44 @@ public:
       });
     }
   }
-  
-  threadPool(const threadPool &other) = delete;
-  threadPool &operator=(const threadPool &other) = delete;
-  threadPool(threadPool &&other) noexcept = delete;
-  threadPool &operator=(threadPool &&other) noexcept = delete;
+
+  threadPool(const threadPool& other) = delete;
+  threadPool& operator=(const threadPool& other) = delete;
+  threadPool(threadPool&& other) noexcept = delete;
+  threadPool& operator=(threadPool&& other) noexcept = delete;
   ~threadPool() {
     killFlag.exchange(true);
-    for (auto &n : threads) {
+    for (auto& n : threads) {
       n.join();
     }
   }
 
-  template <typename FunctionType> void submitJob(FunctionType functor) {
+  template <typename FunctionType>
+  void submitJob(FunctionType functor) {
     std::lock_guard<std::mutex> lock(m);
     jobQueue.push(std::function<void()>(functor));
   }
-  
+
   bool tryJob() {
     m.lock();
     if (jobQueue.empty()) {
       m.unlock();
       return false;
-    } else {
-      std::function<void()> job = jobQueue.front();
-      jobQueue.pop();
-      m.unlock();
-      job();
-      return true;
     }
+    std::function<void()> job = jobQueue.front();
+    jobQueue.pop();
+    m.unlock();
+    job();
+    return true;
   }
-  
-private:
+
+ private:
   std::queue<std::function<void()>> jobQueue;
   std::vector<std::thread> threads;
   mutable std::mutex m;
-  std::atomic_bool killFlag = false;
+  std::atomic_bool killFlag{false};
 };
 
-} // namespace kge
+}  // namespace kge
 
 #endif
