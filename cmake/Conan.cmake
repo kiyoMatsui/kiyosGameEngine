@@ -15,7 +15,12 @@ conan_add_remote(NAME bincrafters URL
 
 conan_cmake_run(
   REQUIRES
-  imgui-sfml/2.1@bincrafters/stable
+  sfml/2.5.0@bincrafters/stable
+  OPTIONS
+  sfml:window=True
+  sfml:graphics=True
+  sfml:network=True
+  sfml:audio=True
   BASIC_SETUP
   CMAKE_TARGETS # individual targets to link to
   BUILD
