@@ -3,7 +3,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.5)
 PROJECT(kiyosGameEngine)
 
 SET(APPLICATION_NAME "kiyosGameEngine")
-SET(APPLICATION_VERSION_STRING 0.81)
+SET(APPLICATION_VERSION_STRING 1.0)
 
 ## Project Output Paths
 SET(MAINFOLDER ${PROJECT_SOURCE_DIR})
@@ -19,37 +19,43 @@ INCLUDE_DIRECTORIES("${MAINFOLDER}/thirdParty/catch") #catch.hpp
 ## example project Sources
 FILE(GLOB_RECURSE EXAMPLE_SRCS ${MAINFOLDER}/examples/sfmlExample.cpp )
 
-## Project Dependencies
-
-find_package(SFML 2 COMPONENTS audio graphics window system network)
-# If found, include and link; otherwise output error message
-if(SFML_FOUND)
-	include_directories(${SFML_INCLUDE_DIR})
+if(WIN32)
+  include(cmake/Conan.cmake)
+  run_conan()
+  set(SFML_FOUND TRUE)
 else()
+  find_package(SFML 2 COMPONENTS audio graphics window system network)
+  if(SFML_FOUND)
+	include_directories(${SFML_INCLUDE_DIR})
+  else()
 	message(WARNING "-> Make sure the SFML libraries with the same configuration (Release/Debug, Static/Dynamic) exist")
+  endif()
 endif()
 
-
-
+if(MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+else()
 ## Use compiler debugging flags per default
 INCLUDE(CxxFlags)
-
 #debug
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG} -std=c++17 -pthread")
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG} -std=c++17 -pthread")
 
 #thread sanitizer
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fsanitize=thread -g -O1")
 
 #release
-#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -std=c++17 -pthread")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -std=c++17 -pthread")
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -std=c++17 -march=native -pthread")
+endif()
 
 set(BUILD_TESTING true CACHE BOOL "Enable building of tests.")
 
 ## Creating Binaries for examples
 if(SFML_FOUND)
-SET(KGEPROJECT_LIBS ${CMAKE_DL_LIBS} ${SFML_LIBRARIES} )
-
+SET(KGEPROJECT_LIBS ${CMAKE_DL_LIBS} ${SFML_LIBRARIES})
+if(WIN32)
+    SET(KGEPROJECT_LIBS "${KGEPROJECT_LIBS}CONAN_PKG::sfml" )
+endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
