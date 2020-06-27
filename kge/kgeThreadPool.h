@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2020 Kiyo Matsui
-KiyosGameEngine v0.9 
+KiyosGameEngine v1.1
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
