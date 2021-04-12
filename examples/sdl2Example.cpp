@@ -14,9 +14,17 @@
 #include "kgePointLine.h"
 #include "kgeThreadPool.h"
 
+#define WIDTH 640
+#define HEIGHT 360
+
 // Entities
 #define startEntity 1
 #define builtEntity 2
+
+struct SDLpointers {
+	SDL_Renderer *renderer;
+	SDL_Window *window;
+};
 
 // Component (others are points, this one is a little bigger).
 class bodyData {
@@ -33,10 +41,10 @@ class bodyData {
 class meteorShape {
  public:
   meteorShape() {}
-  meteorShape(SDL_color aColour, SDL_Rect aRect)
-      : colour(0, 0, 0, 255), rect(0,0,1,1) {}
+  meteorShape(SDL_Color aColour, SDL_Rect aRect)
+      : colour({0, 0, 0, 255}), rect({0,0,1,1}) {}
 
-  create() {
+  void create() {
       rect.x = 0; 
       rect.y = 0; 
       rect.w = 14; 
@@ -45,21 +53,21 @@ class meteorShape {
 
   }
 
-  setFillColor(SDL_color aColour) {
+  void setFillColor(SDL_Color aColour) {
     colour = aColour;
   }
   
-  SDL_color colour;
+  SDL_Color colour;
   SDL_Rect rect;
 };
 
 // Systems
 class movementSystem {
  public:
-  movementSystem(SDLpointers mContext* const aPtr, kge::entityHandler& aEntities,
+  movementSystem(SDLpointers* const aPtr, kge::entityHandler& aEntities,
                  kge::componentHandler<kge::point<double>>& aPosition, kge::componentHandler<bodyData>& aBody,
                  kge::threadPool<4>* const atpPtr)
-      : screenSize(aPtr->getSize().x, aPtr->getSize().y),
+      : screenSize(WIDTH, HEIGHT),
         entities(aEntities),
         position(aPosition),
         body(aBody),
@@ -162,7 +170,7 @@ class movementSystem {
 
 class renderSystem {
  public:
-  renderSystem(SDLpointers mContext* const aPtr, kge::entityHandler& aEntities,
+  renderSystem(SDLpointers* const aPtr, kge::entityHandler& aEntities,
                kge::componentHandler<kge::point<double>>& aPosition, kge::componentHandler<meteorShape>& aMeteor)
       : wPtr(aPtr), entities(aEntities), position(aPosition), meteor(aMeteor) {}
 
@@ -174,22 +182,28 @@ class renderSystem {
         std::random_device rnd;
         std::mt19937 rng(rnd());
         std::uniform_int_distribution<unsigned char> r0(0, 255);
-        SDL_color mColour = { r0(rng), r0(rng), r0(rng) };
+        SDL_Color mColour = { r0(rng), r0(rng), r0(rng) };
         meteor.getItem(ent.ID).setFillColor(mColour);
       });
     }
 
     entities.for_each([&](auto& ent) {
-      if (ent.alive) { //////////////////////////////////////////////////////
-        meteor.getItem(ent.ID).setPosition((float)position.getItem(ent.ID).x, (float)position.getItem(ent.ID).y);
-        wPtr->draw(meteor.getItem(ent.ID));
-      }
+      if (ent.alive) {
+          SDL_SetRenderDrawColor(wPtr->renderer, meteor.getItem(ent.ID).colour.r, meteor.getItem(ent.ID).colour.g,
+                                meteor.getItem(ent.ID).colour.b, meteor.getItem(ent.ID).colour.a);
+          SDL_Rect pos = { meteor.getItem(ent.ID).rect.x+position.getItem(ent.ID).x+meteor.getItem(ent.ID).rect.w/2,             meteor.getItem(ent.ID).rect.y+position.getItem(ent.ID).y+meteor.getItem(ent.ID).rect.h/2,
+                           meteor.getItem(ent.ID).rect.w, meteor.getItem(ent.ID).rect.h };
+          SDL_RenderFillRect(wPtr->renderer, &pos);
+        //wPtr->draw(meteor.getItem(ent.ID));
+        }
+      SDL_SetRenderDrawColor(wPtr->renderer, 0, 0, 0, 255);
     });
+    SDL_SetRenderDrawColor(wPtr->renderer, 0, 0, 0, 255);
     return 1;
   }
 
  private:
-  SDLpointers mContext* const wPtr;
+  SDLpointers* const wPtr;
   kge::entityHandler& entities;
   kge::componentHandler<kge::point<double>>& position;
   kge::componentHandler<meteorShape>& meteor;
@@ -200,10 +214,10 @@ class renderSystem {
 
 class spawnSystem {
  public:
-  spawnSystem(SDLpointers mContext* const aPtr, kge::entityHandler& aEntities,
+  spawnSystem(SDLpointers* const aPtr, kge::entityHandler& aEntities,
               kge::componentHandler<kge::point<double>>& aPosition, kge::componentHandler<bodyData>& aBody,
               kge::componentHandler<meteorShape>& aMeteor)
-      : screenSize(aPtr->getSize().x, aPtr->getSize().y),
+      : screenSize(WIDTH, HEIGHT),
         entities(aEntities),
         position(aPosition),
         body(aBody),
@@ -241,28 +255,29 @@ class spawnSystem {
 
 class pauseState final : public kge::abstractState {
  public:
-  pauseState(SDLpointers mContext* const aPtr, kge::mainLoop* const mainLoopPtr, kge::entityHandler* aEntities,
+  pauseState(SDLpointers* const aPtr, kge::mainLoop* const mainLoopPtr, kge::entityHandler* aEntities,
              kge::componentHandler<meteorShape>* aMeteor)
       : wPtr(aPtr), mMainLoopPtr(mainLoopPtr), entitiesPtr(aEntities), meteorPtr(aMeteor) {
     SDL_Color white = {255, 255, 255}; 
-    if (!(text = TTF_OpenFont("../thirdParty/LiberationSans-Regular.ttf", 18)) ) {
-      text = TTF_OpenFont("thirdParty/LiberationSans-Regular.ttf", 18);
+    if (!(text = TTF_OpenFont("../thirdParty/LiberationSans-Regular.ttf", 14)) ) {
+      text = TTF_OpenFont("thirdParty/LiberationSans-Regular.ttf", 14);
     }
-    SDL_Surface* surfaceMessage = TTF_RenderText_Solid(text, "spacebar to resume    Esc to quit", white); 
-    rect.x = 50;
-    rect.y = 50;
-    rect.w = 500;
-    rect.h = 500;
+    surfaceMessage = TTF_RenderText_Solid(text, "spacebar to resume    Esc to quit", white); 
+    rect.x = 40;
+    rect.y = 40;
+    rect.w = 200;
+    rect.h = 200;
     message = SDL_CreateTextureFromSurface(wPtr->renderer, surfaceMessage);
+    SDL_QueryTexture(message, NULL, NULL, &rect.w, &rect.h);
   }
 
   pauseState(const pauseState& other) = delete;
   pauseState& operator=(const pauseState& other) = delete;
   pauseState(pauseState&& other) noexcept = delete;
   pauseState& operator=(pauseState&& other) noexcept = delete;
-  ~pauseState() override = {
+  ~pauseState() override {
     SDL_FreeSurface(surfaceMessage);
-    SDL_DestroyTexture(Message);
+    SDL_DestroyTexture(message);
   };
   void update(const double /*unused*/) override {}
 
@@ -274,7 +289,7 @@ class pauseState final : public kge::abstractState {
           if (event.window.event == SDL_WINDOWEVENT_CLOSE)
             mMainLoopPtr->popPopState();
           break;
-        case SDL_KeyboardEvent:
+        case SDL_KEYDOWN:
           if (event.key.keysym.sym == SDLK_SPACE) {
             mMainLoopPtr->popState();
           }
@@ -290,7 +305,7 @@ class pauseState final : public kge::abstractState {
   }
 
   void render(const double /*unused*/) override {
-    //wPtr->clear(sf::Color::Black);
+    SDL_RenderClear(wPtr->renderer);
     //sf::RectangleShape greyBack;
     //greyBack.setFillColor(sf::Color(0, 0, 0, 200));
     //greyBack.setSize(wPtr->getView().getSize());
@@ -303,25 +318,24 @@ class pauseState final : public kge::abstractState {
     //wPtr->draw(text);
     //wPtr->display();
 
-    //SDL_RenderClear(wPtr->renderer);
-    //SDL_SetRenderDrawColor(wPtr->renderer, 255, 255, 255, 255);
-    //SDL_RenderCopy(wPtr->renderer, message, NULL, &rect);
-    //SDL_RenderPresent(wPtr->renderer);
+    SDL_RenderCopy(wPtr->renderer, message, NULL, &rect);
+    SDL_RenderPresent(wPtr->renderer);
   }
 
-  SDLpointers mContext* const wPtr;
+  SDLpointers* const wPtr;
   kge::mainLoop* const mMainLoopPtr;
   kge::entityHandler* entitiesPtr;
   kge::componentHandler<meteorShape>* meteorPtr;
-  TTF_Font* const text;
-  SDL_Texture* const message;
+  TTF_Font* text;
+  SDL_Texture* message;
   SDL_Rect rect;
   SDL_Color white;
+  SDL_Surface* surfaceMessage;
 };
 
 class gameState final : public kge::abstractState {
  public:
-  gameState(SDLpointers mContext* const aPtr, kge::mainLoop* const mainLoopPtr, kge::threadPool<4>* const atpPtr)
+  gameState(SDLpointers* const aPtr, kge::mainLoop* const mainLoopPtr, kge::threadPool<4>* const atpPtr)
       : wPtr(aPtr),
         mMainLoopPtr(mainLoopPtr),
         mTpPtr(atpPtr),
@@ -337,9 +351,8 @@ class gameState final : public kge::abstractState {
       unsigned int builtID = entities.build(startEntity).ID;
       std::random_device rnd;
       std::mt19937 rng(rnd());
-      std::uniform_real_distribution<double> r0(10, aPtr->getSize().x - 10);
-      std::uniform_real_distribution<double> r1(10, aPtr->getSize().y - 10);
-      std::uniform_real_distribution<float> r2(0, 360);
+      std::uniform_real_distribution<double> r0(10, WIDTH - 10);
+      std::uniform_real_distribution<double> r1(10, HEIGHT - 10);
       std::uniform_real_distribution<float> r3(-2000, 2000);
       position.getItem(builtID) = kge::point<double>(r0(rng), r1(rng));
       body.getItem(builtID) = bodyData(1.0, r3(rng), r3(rng), 0.0, 0.0);
@@ -363,17 +376,17 @@ class gameState final : public kge::abstractState {
           if (event.window.event == SDL_WINDOWEVENT_CLOSE)
             mMainLoopPtr->popState();
           break;
-        case SDL_KeyboardEvent:
+        case SDL_KEYDOWN:
           if (event.key.keysym.sym == SDLK_SPACE) {
-            mMainLoopPtr->pushState<pauseState, SDLpointers mContext* const, kge::mainLoop* const, kge::entityHandler*,
+            mMainLoopPtr->pushState<pauseState, SDLpointers* const, kge::mainLoop* const, kge::entityHandler*,
                                     kge::componentHandler<meteorShape>*>(wPtr, mMainLoopPtr, &entities, &meteor);
           }
           if (event.key.keysym.sym == SDLK_ESCAPE) {
             mMainLoopPtr->popState();
           }
           break;
-        case SDL_MouseButtonEvent:
-          mSpawnSystem.spawnStack.emplace_back(event.x, event.y);
+        case SDL_MOUSEBUTTONDOWN:
+          mSpawnSystem.spawnStack.emplace_back(event.button.x, event.button.y);
           break;
         default:
           break;
@@ -387,7 +400,7 @@ class gameState final : public kge::abstractState {
     SDL_RenderPresent(wPtr->renderer);
   }
 
-  SDLpointers mContext* const wPtr;
+  SDLpointers* const wPtr;
   kge::mainLoop* const mMainLoopPtr;
   kge::threadPool<4>* const mTpPtr;
   kge::entityHandler entities;
@@ -402,27 +415,29 @@ class gameState final : public kge::abstractState {
 
 class menuState final : public kge::abstractState {
  public:
-  menuState(SDLpointers mContext* const aPtr, kge::mainLoop* const mainLoopPtr, kge::threadPool<4>* const atpPtr)
+  menuState(SDLpointers* const aPtr, kge::mainLoop* const mainLoopPtr, kge::threadPool<4>* const atpPtr)
       : wPtr(aPtr), mMainLoopPtr(mainLoopPtr), mTpPtr(atpPtr) {
     SDL_Color white = {255, 255, 255}; 
-    if (!(text = TTF_OpenFont("../thirdParty/LiberationSans-Regular.ttf", 18)) ) {
-      text = TTF_OpenFont("thirdParty/LiberationSans-Regular.ttf", 18);
+    if (!(text = TTF_OpenFont("../thirdParty/LiberationSans-Regular.ttf", 14)) ) {
+      text = TTF_OpenFont("thirdParty/LiberationSans-Regular.ttf", 14);
     }
-    SDL_Surface* surfaceMessage = TTF_RenderText_Solid(text, "thanks for trying kge,    spacebar to play/pause demo    Esc to quit", white); 
-    rect.x = 50;
-    rect.y = 50;
-    rect.w = 500;
-    rect.h = 500;
+    surfaceMessage = TTF_RenderText_Solid(text, "thanks for trying kge,    spacebar to play/pause demo    Esc to quit", white); 
+    rect.x = 40;
+    rect.y = 40;
+    rect.w = 200;
+    rect.h = 200;
     message = SDL_CreateTextureFromSurface(wPtr->renderer, surfaceMessage);
+    SDL_QueryTexture(message, NULL, NULL, &rect.w, &rect.h);
   }
 
   menuState(const menuState& other) = delete;
   menuState& operator=(const menuState& other) = delete;
   menuState(menuState&& other) noexcept = delete;
   menuState& operator=(menuState&& other) noexcept = delete;
-  ~menuState() override = {
+  ~menuState() override {
     SDL_FreeSurface(surfaceMessage);
-    SDL_DestroyTexture(Message);
+    SDL_DestroyTexture(message);
+    TTF_CloseFont(text);
   };
 
   void update(double /*unused*/) override {}
@@ -430,14 +445,15 @@ class menuState final : public kge::abstractState {
   void processEvents() override {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+      switch (event.type) {  
         case SDL_WINDOWEVENT:
           if (event.window.event == SDL_WINDOWEVENT_CLOSE)
             mMainLoopPtr->popState();
           break;
-        case SDL_KeyboardEvent:
+        case SDL_KEYDOWN:
           if (event.key.keysym.sym == SDLK_SPACE) {
             mMainLoopPtr
-              ->switchState<gameState, SDLpointers mContext* const, kge::mainLoop* const, kge::threadPool<4>* const>(
+              ->switchState<gameState, SDLpointers* const, kge::mainLoop* const, kge::threadPool<4>* const>(
                 wPtr, mMainLoopPtr, mTpPtr);
           }
           if (event.key.keysym.sym == SDLK_ESCAPE) {
@@ -453,44 +469,47 @@ class menuState final : public kge::abstractState {
 
   void render(double /*unused*/) override {
     SDL_RenderClear(wPtr->renderer);
-    SDL_SetRenderDrawColor(wPtr->renderer, 255, 255, 255, 255);
     SDL_RenderCopy(wPtr->renderer, message, NULL, &rect);
     SDL_RenderPresent(wPtr->renderer);
   }
 
-  SDLpointers mContext* const wPtr;
+  SDLpointers* const wPtr;
   kge::mainLoop* mMainLoopPtr;
   kge::threadPool<4>* const mTpPtr;
-  TTF_Font* const text;
-  SDL_Texture* const message;
+  TTF_Font* text;
+  SDL_Texture* message;
   SDL_Rect rect;
   SDL_Color white;
-
+  SDL_Surface* surfaceMessage;
 };
-
-class SDLpointers {
-	SDL_Renderer *renderer;
-	SDL_Window *window;
-}
 
 int main() {
   SDLpointers mContext;
-	int rendererFlags = SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC ;
-	int windowFlags = 0;
-	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-    throw std::runtime_error(std::string("SDL init failed: ") + SDL_GetError());
-	}
-  mContext.window = SDL_CreateWindow("kge example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, windowFlags);
-  mContext.renderer = SDL_CreateRenderer(app.window, -1, rendererFlags);
-
-  kge::threadPool<4> mThreadPool;
-  SDLpointers* const mPtr = &mWindow;
-  kge::threadPool<4>* const tpPtr = &mThreadPool;
-  kge::mainLoop myGame;
-  kge::mainLoop* const gPtr = &myGame;
-  myGame.pushState<menuState, SDLpointers* const, kge::mainLoop* const, kge::threadPool<4>* const>(mPtr, gPtr,
-                                                                                                        tpPtr);
-  myGame.run();
-
+  int rendererFlags = SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC ;
+  int windowFlags = 0;
+  if (SDL_Init(SDL_INIT_VIDEO)  < 0) {
+    throw std::runtime_error(std::string("SDL2 init failed: ") + SDL_GetError());
+  }
+  if (TTF_Init()  < 0) {
+    throw std::runtime_error(std::string("SDL_ttf init failed: ") + SDL_GetError());
+  }
+  
+  try {
+    mContext.window = SDL_CreateWindow("kge example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, windowFlags);
+    mContext.renderer = SDL_CreateRenderer(mContext.window, -1, rendererFlags);
+    kge::threadPool<4> mThreadPool;
+    SDLpointers* const mPtr = &mContext;
+    kge::threadPool<4>* const tpPtr = &mThreadPool;
+    kge::mainLoop myGame;
+    kge::mainLoop* const gPtr = &myGame;
+    myGame.pushState<menuState, SDLpointers* const, kge::mainLoop* const, kge::threadPool<4>* const>(mPtr, gPtr,
+                                                                                                          tpPtr);
+    myGame.run();
+    SDL_Quit();
+    TTF_Quit();
+  } catch (const std::exception& e) {
+    SDL_Quit();
+    TTF_Quit();
+  }
   return 0;
 }
