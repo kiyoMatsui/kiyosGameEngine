@@ -4,10 +4,10 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+#include <stdexcept>
 
-#include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
-#include <SFML/Window.hpp>
+#include "SDL2/SDL.h"
+#include <SDL2/SDL_ttf.h>
 
 #include "kgeECS.h"
 #include "kgeMainLoop.h"
@@ -30,10 +30,33 @@ class bodyData {
   kge::point<double> velocity{0,0};
 };
 
+class meteorShape {
+ public:
+  meteorShape() {}
+  meteorShape(SDL_color aColour, SDL_Rect aRect)
+      : colour(0, 0, 0, 255), rect(0,0,1,1) {}
+
+  create() {
+      rect.x = 0; 
+      rect.y = 0; 
+      rect.w = 14; 
+      rect.h = 14; 
+      colour = { 255, 255, 255, 255};
+
+  }
+
+  setFillColor(SDL_color aColour) {
+    colour = aColour;
+  }
+  
+  SDL_color colour;
+  SDL_Rect rect;
+};
+
 // Systems
 class movementSystem {
  public:
-  movementSystem(sf::RenderWindow* const aPtr, kge::entityHandler& aEntities,
+  movementSystem(SDLpointers mContext* const aPtr, kge::entityHandler& aEntities,
                  kge::componentHandler<kge::point<double>>& aPosition, kge::componentHandler<bodyData>& aBody,
                  kge::threadPool<4>* const atpPtr)
       : screenSize(aPtr->getSize().x, aPtr->getSize().y),
@@ -139,8 +162,8 @@ class movementSystem {
 
 class renderSystem {
  public:
-  renderSystem(sf::RenderWindow* const aPtr, kge::entityHandler& aEntities,
-               kge::componentHandler<kge::point<double>>& aPosition, kge::componentHandler<sf::ConvexShape>& aMeteor)
+  renderSystem(SDLpointers mContext* const aPtr, kge::entityHandler& aEntities,
+               kge::componentHandler<kge::point<double>>& aPosition, kge::componentHandler<meteorShape>& aMeteor)
       : wPtr(aPtr), entities(aEntities), position(aPosition), meteor(aMeteor) {}
 
   int update(const double dt) {
@@ -148,16 +171,16 @@ class renderSystem {
     if (timer > 3.0) {
       entities.for_each_type(2, [&](auto& ent) {
         timer = 0.0;
-        meteor.getItem(ent.ID).setFillColor(sf::Color::White);
         std::random_device rnd;
         std::mt19937 rng(rnd());
         std::uniform_int_distribution<unsigned char> r0(0, 255);
-        meteor.getItem(ent.ID).setFillColor(sf::Color(r0(rng), r0(rng), r0(rng)));
+        SDL_color mColour = { r0(rng), r0(rng), r0(rng) };
+        meteor.getItem(ent.ID).setFillColor(mColour);
       });
     }
 
     entities.for_each([&](auto& ent) {
-      if (ent.alive) {
+      if (ent.alive) { //////////////////////////////////////////////////////
         meteor.getItem(ent.ID).setPosition((float)position.getItem(ent.ID).x, (float)position.getItem(ent.ID).y);
         wPtr->draw(meteor.getItem(ent.ID));
       }
@@ -166,10 +189,10 @@ class renderSystem {
   }
 
  private:
-  sf::RenderWindow* const wPtr;
+  SDLpointers mContext* const wPtr;
   kge::entityHandler& entities;
   kge::componentHandler<kge::point<double>>& position;
-  kge::componentHandler<sf::ConvexShape>& meteor;
+  kge::componentHandler<meteorShape>& meteor;
   double timer{0};
 };
 
@@ -177,9 +200,9 @@ class renderSystem {
 
 class spawnSystem {
  public:
-  spawnSystem(sf::RenderWindow* const aPtr, kge::entityHandler& aEntities,
+  spawnSystem(SDLpointers mContext* const aPtr, kge::entityHandler& aEntities,
               kge::componentHandler<kge::point<double>>& aPosition, kge::componentHandler<bodyData>& aBody,
-              kge::componentHandler<sf::ConvexShape>& aMeteor)
+              kge::componentHandler<meteorShape>& aMeteor)
       : screenSize(aPtr->getSize().x, aPtr->getSize().y),
         entities(aEntities),
         position(aPosition),
@@ -193,21 +216,10 @@ class spawnSystem {
       std::mt19937 rng(rnd());
       std::uniform_real_distribution<double> r0(10, screenSize.x - 10);
       std::uniform_real_distribution<double> r1(10, screenSize.y - 10);
-      std::uniform_real_distribution<float> r2(0, 360);
       std::uniform_real_distribution<float> r3(-2000, 2000);
       position.getItem(builtID) = kge::point<double>(j.x, j.y);
       body.getItem(builtID) = bodyData(1.0, r3(rng), r3(rng), 0.0, 0.0);
-      meteor.getItem(builtID) = sf::ConvexShape();
-      meteor.getItem(builtID).setPointCount(5);
-      meteor.getItem(builtID).setPoint(0, sf::Vector2f(10, 0));
-      meteor.getItem(builtID).setPoint(1, sf::Vector2f(18, 9));
-      meteor.getItem(builtID).setPoint(2, sf::Vector2f(15, 19));
-      meteor.getItem(builtID).setPoint(3, sf::Vector2f(6, 18));
-      meteor.getItem(builtID).setPoint(4, sf::Vector2f(2, 8));
-      meteor.getItem(builtID).setOrigin(10, 10);
-      meteor.getItem(builtID).rotate(r2(rng));
-      meteor.getItem(builtID).setFillColor(sf::Color::Red);
-      meteor.getItem(builtID).setPosition((float)position.getItem(builtID).x, (float)position.getItem(builtID).y);
+      meteor.getItem(builtID).create();
     }
     spawnStack.clear();
     return 1;
@@ -222,81 +234,94 @@ class spawnSystem {
   kge::entityHandler& entities;
   kge::componentHandler<kge::point<double>>& position;
   kge::componentHandler<bodyData>& body;
-  kge::componentHandler<sf::ConvexShape>& meteor;
+  kge::componentHandler<meteorShape>& meteor;
 };
 
 // states
 
 class pauseState final : public kge::abstractState {
  public:
-  pauseState(sf::RenderWindow* const aPtr, kge::mainLoop* const mainLoopPtr, kge::entityHandler* aEntities,
-             kge::componentHandler<sf::ConvexShape>* aMeteor)
+  pauseState(SDLpointers mContext* const aPtr, kge::mainLoop* const mainLoopPtr, kge::entityHandler* aEntities,
+             kge::componentHandler<meteorShape>* aMeteor)
       : wPtr(aPtr), mMainLoopPtr(mainLoopPtr), entitiesPtr(aEntities), meteorPtr(aMeteor) {
-    if (!font.loadFromFile("../thirdParty/LiberationSans-Regular.ttf")) {
-      font.loadFromFile("thirdParty/LiberationSans-Regular.ttf");
+    SDL_Color white = {255, 255, 255}; 
+    if (!(text = TTF_OpenFont("../thirdParty/LiberationSans-Regular.ttf", 18)) ) {
+      text = TTF_OpenFont("thirdParty/LiberationSans-Regular.ttf", 18);
     }
-    text.setFont(font);
-    text.setPosition(sf::Vector2f((float)(aPtr->getSize().x) / 8, (float)(aPtr->getSize().y) / 8));
-    text.setCharacterSize(18);
-    text.setFillColor(sf::Color::White);
-    text.setString("spacebar to resume    Esc to quit");
+    SDL_Surface* surfaceMessage = TTF_RenderText_Solid(text, "spacebar to resume    Esc to quit", white); 
+    rect.x = 50;
+    rect.y = 50;
+    rect.w = 500;
+    rect.h = 500;
+    message = SDL_CreateTextureFromSurface(wPtr->renderer, surfaceMessage);
   }
 
   pauseState(const pauseState& other) = delete;
   pauseState& operator=(const pauseState& other) = delete;
   pauseState(pauseState&& other) noexcept = delete;
   pauseState& operator=(pauseState&& other) noexcept = delete;
-  ~pauseState() override = default;
-
+  ~pauseState() override = {
+    SDL_FreeSurface(surfaceMessage);
+    SDL_DestroyTexture(Message);
+  };
   void update(const double /*unused*/) override {}
 
   void processEvents() override {
-    sf::Event event;
-    wPtr->pollEvent(event);
-    switch (event.type) {
-      case sf::Event::Closed:
-        mMainLoopPtr->popPopState();
-        break;
-      case sf::Event::KeyPressed:
-        if (event.key.code == sf::Keyboard::Space) {
-          mMainLoopPtr->popState();
-        }
-        if (event.key.code == sf::Keyboard::Escape) {
-          mMainLoopPtr->popPopState();
-        }
-        break;
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+      switch (event.type) {
+        case SDL_WINDOWEVENT:
+          if (event.window.event == SDL_WINDOWEVENT_CLOSE)
+            mMainLoopPtr->popPopState();
+          break;
+        case SDL_KeyboardEvent:
+          if (event.key.keysym.sym == SDLK_SPACE) {
+            mMainLoopPtr->popState();
+          }
+          if (event.key.keysym.sym == SDLK_ESCAPE) {
+            mMainLoopPtr->popPopState();
+          }
+          break;
 
-      default:
-        break;
+        default:
+          break;
+      }
     }
   }
 
   void render(const double /*unused*/) override {
-    wPtr->clear(sf::Color::Black);
-    sf::RectangleShape greyBack;
-    greyBack.setFillColor(sf::Color(0, 0, 0, 200));
-    greyBack.setSize(wPtr->getView().getSize());
-    entitiesPtr->for_each([&](auto& ent) {
-      if (ent.alive) {
-        wPtr->draw(meteorPtr->getItem(ent.ID));
-      }
-    });
-    wPtr->draw(greyBack);
-    wPtr->draw(text);
-    wPtr->display();
+    //wPtr->clear(sf::Color::Black);
+    //sf::RectangleShape greyBack;
+    //greyBack.setFillColor(sf::Color(0, 0, 0, 200));
+    //greyBack.setSize(wPtr->getView().getSize());
+    //entitiesPtr->for_each([&](auto& ent) {
+    //  if (ent.alive) {
+    //    wPtr->draw(meteorPtr->getItem(ent.ID));
+    //  }
+    //});
+    //wPtr->draw(greyBack);
+    //wPtr->draw(text);
+    //wPtr->display();
+
+    //SDL_RenderClear(wPtr->renderer);
+    //SDL_SetRenderDrawColor(wPtr->renderer, 255, 255, 255, 255);
+    //SDL_RenderCopy(wPtr->renderer, message, NULL, &rect);
+    //SDL_RenderPresent(wPtr->renderer);
   }
 
-  sf::RenderWindow* const wPtr;
+  SDLpointers mContext* const wPtr;
   kge::mainLoop* const mMainLoopPtr;
   kge::entityHandler* entitiesPtr;
-  kge::componentHandler<sf::ConvexShape>* meteorPtr;
-  sf::Font font;
-  sf::Text text;
+  kge::componentHandler<meteorShape>* meteorPtr;
+  TTF_Font* const text;
+  SDL_Texture* const message;
+  SDL_Rect rect;
+  SDL_Color white;
 };
 
 class gameState final : public kge::abstractState {
  public:
-  gameState(sf::RenderWindow* const aPtr, kge::mainLoop* const mainLoopPtr, kge::threadPool<4>* const atpPtr)
+  gameState(SDLpointers mContext* const aPtr, kge::mainLoop* const mainLoopPtr, kge::threadPool<4>* const atpPtr)
       : wPtr(aPtr),
         mMainLoopPtr(mainLoopPtr),
         mTpPtr(atpPtr),
@@ -318,16 +343,7 @@ class gameState final : public kge::abstractState {
       std::uniform_real_distribution<float> r3(-2000, 2000);
       position.getItem(builtID) = kge::point<double>(r0(rng), r1(rng));
       body.getItem(builtID) = bodyData(1.0, r3(rng), r3(rng), 0.0, 0.0);
-      meteor.getItem(builtID).setPointCount(5);
-      meteor.getItem(builtID).setPoint(0, sf::Vector2f(10, 0));
-      meteor.getItem(builtID).setPoint(1, sf::Vector2f(18, 9));
-      meteor.getItem(builtID).setPoint(2, sf::Vector2f(15, 19));
-      meteor.getItem(builtID).setPoint(3, sf::Vector2f(6, 18));
-      meteor.getItem(builtID).setPoint(4, sf::Vector2f(2, 8));
-      meteor.getItem(builtID).setOrigin(10, 10);
-      meteor.getItem(builtID).rotate(r2(rng));
-      meteor.getItem(builtID).setFillColor(sf::Color::White);
-      meteor.getItem(builtID).setPosition((float)position.getItem(builtID).x, (float)position.getItem(builtID).y);
+      meteor.getItem(builtID).create();
     }
   }
 
@@ -340,42 +356,44 @@ class gameState final : public kge::abstractState {
   void update(const double dt) override { mUpdater.update(dt); }
 
   void processEvents() override {
-    sf::Event event;
-    wPtr->pollEvent(event);
-    switch (event.type) {
-      case sf::Event::Closed:
-        mMainLoopPtr->popState();
-        break;
-      case sf::Event::KeyPressed:
-        if (event.key.code == sf::Keyboard::Space) {
-          mMainLoopPtr->pushState<pauseState, sf::RenderWindow* const, kge::mainLoop* const, kge::entityHandler*,
-                                  kge::componentHandler<sf::ConvexShape>*>(wPtr, mMainLoopPtr, &entities, &meteor);
-        }
-        if (event.key.code == sf::Keyboard::Escape) {
-          mMainLoopPtr->popState();
-        }
-        break;
-      case sf::Event::MouseButtonPressed:
-        mSpawnSystem.spawnStack.emplace_back(event.mouseButton.x, event.mouseButton.y);
-        break;
-      default:
-        break;
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+      switch (event.type) {
+        case SDL_WINDOWEVENT:
+          if (event.window.event == SDL_WINDOWEVENT_CLOSE)
+            mMainLoopPtr->popState();
+          break;
+        case SDL_KeyboardEvent:
+          if (event.key.keysym.sym == SDLK_SPACE) {
+            mMainLoopPtr->pushState<pauseState, SDLpointers mContext* const, kge::mainLoop* const, kge::entityHandler*,
+                                    kge::componentHandler<meteorShape>*>(wPtr, mMainLoopPtr, &entities, &meteor);
+          }
+          if (event.key.keysym.sym == SDLK_ESCAPE) {
+            mMainLoopPtr->popState();
+          }
+          break;
+        case SDL_MouseButtonEvent:
+          mSpawnSystem.spawnStack.emplace_back(event.x, event.y);
+          break;
+        default:
+          break;
+      }
     }
   }
 
   void render(const double dt) override {
-    wPtr->clear(sf::Color::Black);
+    SDL_RenderClear(wPtr->renderer);
     mRenderSystem.update(dt);
-    wPtr->display();
+    SDL_RenderPresent(wPtr->renderer);
   }
 
-  sf::RenderWindow* const wPtr;
+  SDLpointers mContext* const wPtr;
   kge::mainLoop* const mMainLoopPtr;
   kge::threadPool<4>* const mTpPtr;
   kge::entityHandler entities;
   kge::componentHandler<kge::point<double>> position;
   kge::componentHandler<bodyData> body;
-  kge::componentHandler<sf::ConvexShape> meteor;
+  kge::componentHandler<meteorShape> meteor;
   movementSystem mMoveSystem;
   renderSystem mRenderSystem;
   spawnSystem mSpawnSystem;
@@ -384,72 +402,93 @@ class gameState final : public kge::abstractState {
 
 class menuState final : public kge::abstractState {
  public:
-  menuState(sf::RenderWindow* const aPtr, kge::mainLoop* const mainLoopPtr, kge::threadPool<4>* const atpPtr)
+  menuState(SDLpointers mContext* const aPtr, kge::mainLoop* const mainLoopPtr, kge::threadPool<4>* const atpPtr)
       : wPtr(aPtr), mMainLoopPtr(mainLoopPtr), mTpPtr(atpPtr) {
-    if (!font.loadFromFile("../thirdParty/LiberationSans-Regular.ttf")) {
-      font.loadFromFile("thirdParty/LiberationSans-Regular.ttf");
+    SDL_Color white = {255, 255, 255}; 
+    if (!(text = TTF_OpenFont("../thirdParty/LiberationSans-Regular.ttf", 18)) ) {
+      text = TTF_OpenFont("thirdParty/LiberationSans-Regular.ttf", 18);
     }
-    text.setFont(font);
-    text.setPosition(sf::Vector2f((float)(aPtr->getSize().x) / 8, (float)(aPtr->getSize().y) / 8));
-    text.setCharacterSize(18);
-    text.setFillColor(sf::Color::White);
-    text.setString("thanks for trying kge,    spacebar to play/pause demo    Esc to quit");
+    SDL_Surface* surfaceMessage = TTF_RenderText_Solid(text, "thanks for trying kge,    spacebar to play/pause demo    Esc to quit", white); 
+    rect.x = 50;
+    rect.y = 50;
+    rect.w = 500;
+    rect.h = 500;
+    message = SDL_CreateTextureFromSurface(wPtr->renderer, surfaceMessage);
   }
 
   menuState(const menuState& other) = delete;
   menuState& operator=(const menuState& other) = delete;
   menuState(menuState&& other) noexcept = delete;
   menuState& operator=(menuState&& other) noexcept = delete;
-  ~menuState() override = default;
+  ~menuState() override = {
+    SDL_FreeSurface(surfaceMessage);
+    SDL_DestroyTexture(Message);
+  };
 
   void update(double /*unused*/) override {}
 
   void processEvents() override {
-    sf::Event event;
-    wPtr->pollEvent(event);
-    switch (event.type) {
-      case sf::Event::Closed:
-        mMainLoopPtr->popState();
-        break;
-      case sf::Event::KeyPressed:
-        if (event.key.code == sf::Keyboard::Space) {
-          mMainLoopPtr
-            ->switchState<gameState, sf::RenderWindow* const, kge::mainLoop* const, kge::threadPool<4>* const>(
-              wPtr, mMainLoopPtr, mTpPtr);
-        }
-        if (event.key.code == sf::Keyboard::Escape) {
-          mMainLoopPtr->popState();
-        }
-        break;
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        case SDL_WINDOWEVENT:
+          if (event.window.event == SDL_WINDOWEVENT_CLOSE)
+            mMainLoopPtr->popState();
+          break;
+        case SDL_KeyboardEvent:
+          if (event.key.keysym.sym == SDLK_SPACE) {
+            mMainLoopPtr
+              ->switchState<gameState, SDLpointers mContext* const, kge::mainLoop* const, kge::threadPool<4>* const>(
+                wPtr, mMainLoopPtr, mTpPtr);
+          }
+          if (event.key.keysym.sym == SDLK_ESCAPE) {
+            mMainLoopPtr->popState();
+          }
+          break;
 
-      default:
-        break;
+        default:
+          break;
+      }
     }
   }
 
   void render(double /*unused*/) override {
-    wPtr->clear(sf::Color::Black);
-    wPtr->draw(text);
-    wPtr->display();
+    SDL_RenderClear(wPtr->renderer);
+    SDL_SetRenderDrawColor(wPtr->renderer, 255, 255, 255, 255);
+    SDL_RenderCopy(wPtr->renderer, message, NULL, &rect);
+    SDL_RenderPresent(wPtr->renderer);
   }
 
-  sf::RenderWindow* const wPtr;
+  SDLpointers mContext* const wPtr;
   kge::mainLoop* mMainLoopPtr;
   kge::threadPool<4>* const mTpPtr;
-  sf::Font font;
-  sf::Text text;
+  TTF_Font* const text;
+  SDL_Texture* const message;
+  SDL_Rect rect;
+  SDL_Color white;
+
 };
 
+class SDLpointers {
+	SDL_Renderer *renderer;
+	SDL_Window *window;
+}
+
 int main() {
-  sf::RenderWindow mWindow(sf::VideoMode(800, 600), "kge example");
-  mWindow.setFramerateLimit(60);
-  mWindow.setVerticalSyncEnabled(true);
+  SDLpointers mContext;
+	int rendererFlags = SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC ;
+	int windowFlags = 0;
+	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    throw std::runtime_error(std::string("SDL init failed: ") + SDL_GetError());
+	}
+  mContext.window = SDL_CreateWindow("kge example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, windowFlags);
+  mContext.renderer = SDL_CreateRenderer(app.window, -1, rendererFlags);
+
   kge::threadPool<4> mThreadPool;
-  sf::RenderWindow* const mPtr = &mWindow;
+  SDLpointers* const mPtr = &mWindow;
   kge::threadPool<4>* const tpPtr = &mThreadPool;
   kge::mainLoop myGame;
   kge::mainLoop* const gPtr = &myGame;
-  myGame.pushState<menuState, sf::RenderWindow* const, kge::mainLoop* const, kge::threadPool<4>* const>(mPtr, gPtr,
+  myGame.pushState<menuState, SDLpointers* const, kge::mainLoop* const, kge::threadPool<4>* const>(mPtr, gPtr,
                                                                                                         tpPtr);
   myGame.run();
 
