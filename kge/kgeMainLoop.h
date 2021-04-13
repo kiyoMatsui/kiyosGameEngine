@@ -1,6 +1,10 @@
 #ifndef KGE_MAINLOOP_H
 #define KGE_MAINLOOP_H
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -44,26 +48,36 @@ class mainLoop {
   abstractState* peekUnderState() const { return stateStack.rbegin()[1].get(); }
 
   void run() {
-    auto start = std::chrono::steady_clock::now();
+    start = std::chrono::steady_clock::now();
     if (changeStatePtr) {
       (*changeStatePtr)();
       changeStatePtr = nullptr;
     }
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop(tick, -1, 0);	
+#else
     while (!stateStack.empty()) {
-      auto elapsedTime = std::chrono::steady_clock::now() - start;
-      start = std::chrono::steady_clock::now();
-      double dt_double = std::chrono::duration<double>(elapsedTime).count();
-      stateStack.back()->processEvents();
-      stateStack.back()->update(dt_double);
-      stateStack.back()->render(dt_double);
-
-      if (changeStatePtr) {
-        (*changeStatePtr)();
-        changeStatePtr = nullptr;
-      }
+      tick();  
     }
+#endif
   }
+  
+  void tick() {
+    auto elapsedTime = std::chrono::steady_clock::now() - start;
+    start = std::chrono::steady_clock::now();
+    double dt_double = std::chrono::duration<double>(elapsedTime).count();
+    stateStack.back()->processEvents();
+    stateStack.back()->update(dt_double);
+    stateStack.back()->render(dt_double);
 
+    if (changeStatePtr) {
+      (*changeStatePtr)();
+      changeStatePtr = nullptr;
+    }
+#ifdef __EMSCRIPTEN__
+    if (!stateStack.empty()) emscripten_cancel_main_loop();
+#endif
+  }
  private:
   template <typename pushedState, typename... Elements>
   void pushToStack(Elements... args);
@@ -80,6 +94,7 @@ class mainLoop {
 
   std::vector<std::unique_ptr<abstractState>> stateStack;
   std::unique_ptr<std::function<void()>> changeStatePtr{nullptr};
+  std::chrono::time_point<std::chrono::steady_clock> start;
 };
 
 template <typename pushedState, typename... Elements>
