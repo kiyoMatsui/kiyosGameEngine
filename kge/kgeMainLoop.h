@@ -12,6 +12,8 @@
 
 namespace kge {
 
+void emscriptenTick(void* arg);
+ 
 class abstractState {
  public:
   virtual ~abstractState() = default;
@@ -28,6 +30,8 @@ class mainLoop {
   mainLoop(mainLoop&& other) noexcept = delete;
   mainLoop& operator=(mainLoop&& other) noexcept = delete;
   ~mainLoop() = default;
+  
+  friend void emscriptenTick(void* argVoid);
 
   template <typename pushedState, typename... Elements>
   void pushState(Elements... args);
@@ -54,7 +58,7 @@ class mainLoop {
       changeStatePtr = nullptr;
     }
 #ifdef __EMSCRIPTEN__
-    emscripten_set_main_loop(tick, -1, 0);	
+    emscripten_set_main_loop_arg(emscriptenTick, this, -1, 1);	
 #else
     while (!stateStack.empty()) {
       tick();  
@@ -74,9 +78,6 @@ class mainLoop {
       (*changeStatePtr)();
       changeStatePtr = nullptr;
     }
-#ifdef __EMSCRIPTEN__
-    if (!stateStack.empty()) emscripten_cancel_main_loop();
-#endif
   }
  private:
   template <typename pushedState, typename... Elements>
@@ -96,6 +97,24 @@ class mainLoop {
   std::unique_ptr<std::function<void()>> changeStatePtr{nullptr};
   std::chrono::time_point<std::chrono::steady_clock> start;
 };
+
+#ifdef __EMSCRIPTEN__
+void emscriptenTick(void* argVoid) {
+  mainLoop* arg = static_cast<mainLoop*>(argVoid); 
+  auto elapsedTime = std::chrono::steady_clock::now() - arg->start;
+  arg->start = std::chrono::steady_clock::now();
+  double dt_double = std::chrono::duration<double>(elapsedTime).count();
+  arg->stateStack.back()->processEvents();
+  arg->stateStack.back()->update(dt_double);
+  arg->stateStack.back()->render(dt_double);
+
+  if (arg->changeStatePtr) {
+    (*(arg->changeStatePtr))();
+    arg->changeStatePtr = nullptr;
+  }
+  //if (!arg->stateStack.empty()) emscripten_cancel_main_loop();
+}
+#endif
 
 template <typename pushedState, typename... Elements>
 void mainLoop::pushState(Elements... args) {
