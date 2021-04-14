@@ -62,7 +62,7 @@ class movementSystem {
  public:
   movementSystem(SDLpointers* const aPtr, kge::entityHandler& aEntities,
                  kge::componentHandler<kge::point<double>>& aPosition, kge::componentHandler<bodyData>& aBody,
-                 kge::threadPool<0>* const atpPtr)
+                 kge::threadPool<4>* const atpPtr)
       : screenSize(WIDTH, HEIGHT), entities(aEntities), position(aPosition), body(aBody), mTpPtr(atpPtr) {}
 
   void updateBlock(const double dt, const int size, const int threadNo, bool endFlag = false) {
@@ -129,7 +129,7 @@ class movementSystem {
     copyCont = position.getData();
 
     unsigned int block = static_cast<unsigned int>(entities.containerSize) / 4;
-    for (int x = 0; x < 0; x++) {
+    for (int x = 0; x < 3; x++) {
       sync++;
       mTpPtr->submitJob([=]() { updateBlock(dt, block, x); });
     }
@@ -152,7 +152,7 @@ class movementSystem {
   kge::entityHandler& entities;
   kge::componentHandler<kge::point<double>>& position;
   kge::componentHandler<bodyData>& body;
-  kge::threadPool<0>* const mTpPtr;
+  kge::threadPool<4>* const mTpPtr;
   std::unordered_set<unsigned int> mKillSet;
   mutable std::mutex mKillSetMutex;
   std::atomic_int sync{0};
@@ -187,7 +187,6 @@ class renderSystem {
                         meteor.getItem(ent.ID).rect.y + (int)position.getItem(ent.ID).y - meteor.getItem(ent.ID).rect.h / 2,
                         meteor.getItem(ent.ID).rect.w, meteor.getItem(ent.ID).rect.h};
         SDL_RenderFillRect(wPtr->renderer, &pos);
-        // wPtr->draw(meteor.getItem(ent.ID));
       }
       SDL_SetRenderDrawColor(wPtr->renderer, 0, 0, 0, 255);
     });
@@ -276,7 +275,9 @@ class pauseState final : public kge::abstractState {
     while (SDL_PollEvent(&event)) {
       switch (event.type) {
         case SDL_WINDOWEVENT:
-          if (event.window.event == SDL_WINDOWEVENT_CLOSE) mMainLoopPtr->popPopState();
+          if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
+			mMainLoopPtr->popPopState();
+		  }
           break;
         case SDL_KEYDOWN:
           if (event.key.keysym.sym == SDLK_SPACE) {
@@ -295,18 +296,6 @@ class pauseState final : public kge::abstractState {
 
   void render(const double /*unused*/) override {
     SDL_RenderClear(wPtr->renderer);
-    // sf::RectangleShape greyBack;
-    // greyBack.setFillColor(sf::Color(0, 0, 0, 200));
-    // greyBack.setSize(wPtr->getView().getSize());
-    // entitiesPtr->for_each([&](auto& ent) {
-    //  if (ent.alive) {
-    //    wPtr->draw(meteorPtr->getItem(ent.ID));
-    //  }
-    //});
-    // wPtr->draw(greyBack);
-    // wPtr->draw(text);
-    // wPtr->display();
-
     SDL_RenderCopy(wPtr->renderer, message, NULL, &rect);
     SDL_RenderPresent(wPtr->renderer);
   }
@@ -324,7 +313,7 @@ class pauseState final : public kge::abstractState {
 
 class gameState final : public kge::abstractState {
  public:
-  gameState(SDLpointers* const aPtr, kge::mainLoop* const mainLoopPtr, kge::threadPool<0>* const atpPtr)
+  gameState(SDLpointers* const aPtr, kge::mainLoop* const mainLoopPtr, kge::threadPool<4>* const atpPtr)
       : wPtr(aPtr),
         mMainLoopPtr(mainLoopPtr),
         mTpPtr(atpPtr),
@@ -362,7 +351,9 @@ class gameState final : public kge::abstractState {
     while (SDL_PollEvent(&event)) {
       switch (event.type) {
         case SDL_WINDOWEVENT:
-          if (event.window.event == SDL_WINDOWEVENT_CLOSE) mMainLoopPtr->popState();
+          if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
+            mMainLoopPtr->popState();
+		  }
           break;
         case SDL_KEYDOWN:
           if (event.key.keysym.sym == SDLK_SPACE) {
@@ -390,7 +381,7 @@ class gameState final : public kge::abstractState {
 
   SDLpointers* const wPtr;
   kge::mainLoop* const mMainLoopPtr;
-  kge::threadPool<0>* const mTpPtr;
+  kge::threadPool<4>* const mTpPtr;
   kge::entityHandler entities;
   kge::componentHandler<kge::point<double>> position;
   kge::componentHandler<bodyData> body;
@@ -403,7 +394,7 @@ class gameState final : public kge::abstractState {
 
 class menuState final : public kge::abstractState {
  public:
-  menuState(SDLpointers* const aPtr, kge::mainLoop* const mainLoopPtr, kge::threadPool<0>* const atpPtr)
+  menuState(SDLpointers* const aPtr, kge::mainLoop* const mainLoopPtr, kge::threadPool<4>* const atpPtr)
       : wPtr(aPtr), mMainLoopPtr(mainLoopPtr), mTpPtr(atpPtr) {
     SDL_Color white = {255, 255, 255};
     if (!(text = TTF_OpenFont("../thirdParty/LiberationSans-Regular.ttf", 14))) {
@@ -436,11 +427,13 @@ class menuState final : public kge::abstractState {
     while (SDL_PollEvent(&event)) {
       switch (event.type) {
         case SDL_WINDOWEVENT:
-          if (event.window.event == SDL_WINDOWEVENT_CLOSE) mMainLoopPtr->popState();
+          if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
+            mMainLoopPtr->popState();
+		  }
           break;
         case SDL_KEYDOWN:
           if (event.key.keysym.sym == SDLK_SPACE) {
-            mMainLoopPtr->switchState<gameState, SDLpointers* const, kge::mainLoop* const, kge::threadPool<0>* const>(
+            mMainLoopPtr->switchState<gameState, SDLpointers* const, kge::mainLoop* const, kge::threadPool<4>* const>(
               wPtr, mMainLoopPtr, mTpPtr);
           }
           if (event.key.keysym.sym == SDLK_ESCAPE) {
@@ -462,7 +455,7 @@ class menuState final : public kge::abstractState {
 
   SDLpointers* const wPtr;
   kge::mainLoop* mMainLoopPtr;
-  kge::threadPool<0>* const mTpPtr;
+  kge::threadPool<4>* const mTpPtr;
   TTF_Font* text;
   SDL_Texture* message;
   SDL_Rect rect;
@@ -485,12 +478,12 @@ int main() {
     mContext.window =
       SDL_CreateWindow("kge example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, windowFlags);
     mContext.renderer = SDL_CreateRenderer(mContext.window, -1, rendererFlags);
-    kge::threadPool<0> mThreadPool;
+    kge::threadPool<4> mThreadPool;
     SDLpointers* const mPtr = &mContext;
-    kge::threadPool<0>* const tpPtr = &mThreadPool;
+    kge::threadPool<4>* const tpPtr = &mThreadPool;
     kge::mainLoop myGame;
     kge::mainLoop* const gPtr = &myGame;
-    myGame.pushState<menuState, SDLpointers* const, kge::mainLoop* const, kge::threadPool<0>* const>(mPtr, gPtr, tpPtr);
+    myGame.pushState<menuState, SDLpointers* const, kge::mainLoop* const, kge::threadPool<4>* const>(mPtr, gPtr, tpPtr);
     myGame.run();
     SDL_Quit();
     TTF_Quit();

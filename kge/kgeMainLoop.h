@@ -100,7 +100,7 @@ class mainLoop {
 
 #ifdef __EMSCRIPTEN__
 void emscriptenTick(void* argVoid) {
-  mainLoop* arg = static_cast<mainLoop*>(argVoid); 
+  mainLoop* arg = static_cast<mainLoop* const>(argVoid); 
   auto elapsedTime = std::chrono::steady_clock::now() - arg->start;
   arg->start = std::chrono::steady_clock::now();
   double dt_double = std::chrono::duration<double>(elapsedTime).count();
@@ -112,7 +112,7 @@ void emscriptenTick(void* argVoid) {
     (*(arg->changeStatePtr))();
     arg->changeStatePtr = nullptr;
   }
-  //if (!arg->stateStack.empty()) emscripten_cancel_main_loop();
+  if (arg->stateStack.empty()) emscripten_cancel_main_loop();
 }
 #endif
 
