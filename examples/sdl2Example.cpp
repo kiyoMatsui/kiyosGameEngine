@@ -9,10 +9,10 @@
 #include <SDL2/SDL_ttf.h>
 #include "SDL2/SDL.h"
 
-#include "kgeECS.h"
-#include "kgeMainLoop.h"
-#include "kgePointLine.h"
-#include "kgeThreadPool.h"
+#include "../kge/kgeECS.h"
+#include "../kge/kgeMainLoop.h"
+#include "../kge/kgePointLine.h"
+#include "../kge/kgeThreadPool.h"
 //g++ -g ./sdl2Example.cpp -w -lSDL2 -lSDL2_ttf -std=c++17 -pthread -o sdl2Example
 extern constexpr int WIDTH = 640;
 extern constexpr int HEIGHT = 360;
@@ -188,7 +188,6 @@ class renderSystem {
                         meteor.getItem(ent.ID).rect.w, meteor.getItem(ent.ID).rect.h};
         SDL_RenderFillRect(wPtr->renderer, &pos);
       }
-      SDL_SetRenderDrawColor(wPtr->renderer, 0, 0, 0, 255);
     });
     SDL_SetRenderDrawColor(wPtr->renderer, 0, 0, 0, 255);
     return 1;
@@ -244,8 +243,8 @@ class spawnSystem {
 class pauseState final : public kge::abstractState {
  public:
   pauseState(SDLpointers* const aPtr, kge::mainLoop* const mainLoopPtr, kge::entityHandler* aEntities,
-             kge::componentHandler<meteorShape>* aMeteor)
-      : wPtr(aPtr), mMainLoopPtr(mainLoopPtr), entitiesPtr(aEntities), meteorPtr(aMeteor) {
+             kge::componentHandler<meteorShape>* aMeteor, kge::componentHandler<kge::point<double>>* aPosition)
+      : wPtr(aPtr), mMainLoopPtr(mainLoopPtr), entitiesPtr(aEntities), meteorPtr(aMeteor), positionPtr(aPosition) {
     SDL_Color white = {255, 255, 255};
     if (!(text = TTF_OpenFont("../thirdParty/LiberationSans-Regular.ttf", 14))) {
       text = TTF_OpenFont("thirdParty/LiberationSans-Regular.ttf", 14);
@@ -296,6 +295,16 @@ class pauseState final : public kge::abstractState {
 
   void render(const double /*unused*/) override {
     SDL_RenderClear(wPtr->renderer);
+	SDL_SetRenderDrawColor(wPtr->renderer, 50, 50, 50, 100);
+    entitiesPtr->for_each([&](auto& ent) {
+      if (ent.alive) {
+        SDL_Rect pos = {meteorPtr->getItem(ent.ID).rect.x + (int)positionPtr->getItem(ent.ID).x - meteorPtr->getItem(ent.ID).rect.w / 2,
+                        meteorPtr->getItem(ent.ID).rect.y + (int)positionPtr->getItem(ent.ID).y - meteorPtr->getItem(ent.ID).rect.h / 2,
+                        meteorPtr->getItem(ent.ID).rect.w, meteorPtr->getItem(ent.ID).rect.h};
+        SDL_RenderFillRect(wPtr->renderer, &pos);
+      }
+    });
+    SDL_SetRenderDrawColor(wPtr->renderer, 0, 0, 0, 255);
     SDL_RenderCopy(wPtr->renderer, message, NULL, &rect);
     SDL_RenderPresent(wPtr->renderer);
   }
@@ -304,6 +313,7 @@ class pauseState final : public kge::abstractState {
   kge::mainLoop* const mMainLoopPtr;
   kge::entityHandler* entitiesPtr;
   kge::componentHandler<meteorShape>* meteorPtr;
+  kge::componentHandler<kge::point<double>>* positionPtr;
   TTF_Font* text;
   SDL_Texture* message;
   SDL_Rect rect;
@@ -358,7 +368,7 @@ class gameState final : public kge::abstractState {
         case SDL_KEYDOWN:
           if (event.key.keysym.sym == SDLK_SPACE) {
             mMainLoopPtr->pushState<pauseState, SDLpointers* const, kge::mainLoop* const, kge::entityHandler*,
-                                    kge::componentHandler<meteorShape>*>(wPtr, mMainLoopPtr, &entities, &meteor);
+                                    kge::componentHandler<meteorShape>*>(wPtr, mMainLoopPtr, &entities, &meteor, &position);
           }
           if (event.key.keysym.sym == SDLK_ESCAPE) {
             mMainLoopPtr->popState();
