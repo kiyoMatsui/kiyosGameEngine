@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head/>
+	<body>
+		<main role="main" class="inner cover">
+			<div id="loadingDiv">Emscripten Game</div>
+			<p></p>
+			<canvas class="emscripten" id="canvas"/>
+			<script>
+              var Module = {
+                 canvas: (function() {
+                     return canvas = document.getElementById('canvas')
+                 })()
+              };
+			  var script = document.createElement('script');
+			  script.src = "index.js";
+			  document.body.appendChild(script);
+			</script>
+		</main>
+	</body>
+</html>
