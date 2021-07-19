@@ -29,7 +29,7 @@ http://www.apache.org/licenses/
 // Component (others are points, this one is a little bigger).
 class bodyData {
  public:
-  bodyData() {}
+  bodyData() = default;
   bodyData(double mMass, double aAccelerationX, double aAccelerationY, double aVelocityX, double aVelocityY)
       : mass(mMass), acceleration(aAccelerationX, aAccelerationY), velocity(aVelocityX, aVelocityY) {}
 
@@ -268,8 +268,7 @@ class pauseState final : public kge::abstractState {
       case sf::Event::KeyPressed:
         if (event.key.code == sf::Keyboard::Space) {
           mMainLoopPtr->popState();
-        }
-        if (event.key.code == sf::Keyboard::Escape) {
+        } else if (event.key.code == sf::Keyboard::Escape) {
           mMainLoopPtr->popPopState();
         }
         break;
@@ -358,8 +357,7 @@ class gameState final : public kge::abstractState {
         if (event.key.code == sf::Keyboard::Space) {
           mMainLoopPtr->pushState<pauseState, sf::RenderWindow* const, kge::mainLoop* const, kge::entityHandler*,
                                   kge::componentHandler<sf::ConvexShape>*>(wPtr, mMainLoopPtr, &entities, &meteor);
-        }
-        if (event.key.code == sf::Keyboard::Escape) {
+        } else if (event.key.code == sf::Keyboard::Escape) {
           mMainLoopPtr->popState();
         }
         break;
@@ -424,8 +422,7 @@ class menuState final : public kge::abstractState {
           mMainLoopPtr
             ->switchState<gameState, sf::RenderWindow* const, kge::mainLoop* const, kge::threadPool<4>* const>(
               wPtr, mMainLoopPtr, mTpPtr);
-        }
-        if (event.key.code == sf::Keyboard::Escape) {
+        } else if (event.key.code == sf::Keyboard::Escape) {
           mMainLoopPtr->popState();
         }
         break;

@@ -19,234 +19,236 @@ http://www.apache.org/licenses/
 
 namespace kge {
 
-template <typename T>
+static constexpr float smalln = 0.001;
+static constexpr float smallern = 0.0001;  
+  
+template <typename Type>
 class point {
-  static_assert(std::is_arithmetic<T>::value, "must be arithmetic type / useful fundamental type");
+  static_assert(std::is_arithmetic_v<Type>, "must be arithmetic type / useful fundamental type");
 
  public:
-  point<T>() { kgeTestPrint("called no-args constructor"); }
+  point<Type>() { kgeTestPrint("called no-args constructor"); }
 
-  point<T>(T ax, T ay) : x(ax), y(ay) { kgeTestPrint("called constructor with arguments"); }
+  point<Type>(Type ax, Type ay) : x(ax), y(ay) { kgeTestPrint("called constructor with arguments"); }
 
-  point<T>(const point<T>& arg1) = default;
-  point<T>& operator=(const point<T>& arg1) = default;
-  point<T>(point<T>&& other) noexcept = default;
-  point<T>& operator=(point<T>&& other) noexcept = default;
-  ~point<T>() = default;
+  //point<Type>(const point<Type>& arg1) = default;
+  //point<Type>& operator=(const point<Type>& arg1) = default;
+  //point<Type>(point<Type>&& other) noexcept = default;
+  //point<Type>& operator=(point<Type>&& other) noexcept = default;
 
-  T x{0};
-  T y{0};
+  Type x{0};
+  Type y{0};
 
-  point<T>& operator+=(const point<T>& arg1) {
+  point<Type>& operator+=(const point<Type>& arg1) {
     kgeTestPrint("called operator +=");
     this->x += arg1.x;
     this->y += arg1.y;
     return *this;
   }
 
-  point<T>& operator+=(const T& arg1) {
+  point<Type>& operator+=(const Type& arg1) {
     kgeTestPrint("called operator += for type");
     this->x += arg1;
     this->y += arg1;
     return *this;
   }
 
-  point<T>& operator-=(const point<T>& arg1) {
+  point<Type>& operator-=(const point<Type>& arg1) {
     kgeTestPrint("called operator -=");
     this->x -= arg1.x;
     this->y -= arg1.y;
     return *this;
   }
 
-  point<T>& operator-=(const T& arg1) {
+  point<Type>& operator-=(const Type& arg1) {
     kgeTestPrint("called operator -= for type");
     this->x -= arg1;
     this->y -= arg1;
     return *this;
   }
 
-  point<T>& operator*=(const point<T>& arg1) {
+  point<Type>& operator*=(const point<Type>& arg1) {
     kgeTestPrint("called operator *=");
     this->x *= arg1.x;
     this->y *= arg1.y;
     return *this;
   }
 
-  point<T>& operator*=(const T& arg1) {
+  point<Type>& operator*=(const Type& arg1) {
     kgeTestPrint("called operator *= for type");
     this->x *= arg1;
     this->y *= arg1;
     return *this;
   }
 
-  point<T>& operator/=(const point<T>& arg1) {
+  point<Type>& operator/=(const point<Type>& arg1) {
     kgeTestPrint("called operator /=");
     this->x /= arg1.x;
     this->y /= arg1.y;
     return *this;
   }
 
-  point<T>& operator/=(const T& arg1) {
+  point<Type>& operator/=(const Type& arg1) {
     kgeTestPrint("called operator /= for type");
     this->x /= arg1;
     this->y /= arg1;
     return *this;
   }
 
-  T length(const point<T>& arg1) const {
+  [[nodiscard]] Type length(const point<Type>& arg1) const {
     kgeTestPrint("called length");
-    point<T> a = *this - arg1;
+    point<Type> a = *this - arg1;
     return (std::hypot(a.x, a.y));
   }
 };
 
-template <typename T>
-point<T> operator+(const point<T>& arg1, const point<T>& arg2) {
+template <typename Type>
+point<Type> operator+(const point<Type>& arg1, const point<Type>& arg2) {
   kgeTestPrint("called operator +");
-  return point<T>((arg1.x + arg2.x), (arg1.y + arg2.y));
+  return point<Type>((arg1.x + arg2.x), (arg1.y + arg2.y));
 }
 
-template <typename T>
-point<T> operator+(const point<T>& arg1, const T& arg2) {
+template <typename Type>
+point<Type> operator+(const point<Type>& arg1, const Type& arg2) {
   kgeTestPrint("called operator + with type");
-  return point<T>((arg1.x + arg2), (arg1.y + arg2));
+  return point<Type>((arg1.x + arg2), (arg1.y + arg2));
 }
 
-template <typename T>
-point<T> operator-(const point<T>& arg1, const point<T>& arg2) {
+template <typename Type>
+point<Type> operator-(const point<Type>& arg1, const point<Type>& arg2) {
   kgeTestPrint("called operator -");
-  return point<T>((arg1.x - arg2.x), (arg1.y - arg2.y));
+  return point<Type>((arg1.x - arg2.x), (arg1.y - arg2.y));
 }
 
-template <typename T>
-point<T> operator-(const point<T>& arg1, const T& arg2) {
+template <typename Type>
+point<Type> operator-(const point<Type>& arg1, const Type& arg2) {
   kgeTestPrint("called operator - with type");
-  return point<T>((arg1.x - arg2), (arg1.y - arg2));
+  return point<Type>((arg1.x - arg2), (arg1.y - arg2));
 }
 
-template <typename T>
-point<T> operator*(const point<T>& arg1, const point<T>& arg2) {
+template <typename Type>
+point<Type> operator*(const point<Type>& arg1, const point<Type>& arg2) {
   kgeTestPrint("called operator *");
-  return point<T>((arg1.x * arg2.x), (arg1.y * arg2.y));
+  return point<Type>((arg1.x * arg2.x), (arg1.y * arg2.y));
 }
 
-template <typename T>
-point<T> operator*(const point<T>& arg1, const T& arg2) {
+template <typename Type>
+point<Type> operator*(const point<Type>& arg1, const Type& arg2) {
   kgeTestPrint("called operator +  with type");
-  return point<T>((arg1.x * arg2), (arg1.y * arg2));
+  return point<Type>((arg1.x * arg2), (arg1.y * arg2));
 }
 
-template <typename T>
-point<T> operator/(const point<T>& arg1, const point<T>& arg2) {
+template <typename Type>
+point<Type> operator/(const point<Type>& arg1, const point<Type>& arg2) {
   kgeTestPrint("called operator /");
-  return point<T>((arg1.x / arg2.x), (arg1.y / arg2.y));
+  return point<Type>((arg1.x / arg2.x), (arg1.y / arg2.y));
 }
 
-template <typename T>
-point<T> operator/(const point<T>& arg1, const T& arg2) {
+template <typename Type>
+point<Type> operator/(const point<Type>& arg1, const Type& arg2) {
   kgeTestPrint("called operator / with type");
-  return point<T>((arg1.x / arg2), (arg1.y / arg2));
+  return point<Type>((arg1.x / arg2), (arg1.y / arg2));
 }
 
-template <typename T>
-bool operator==(const point<T>& arg1, const point<T>& arg2) {
+template <typename Type>
+bool operator==(const point<Type>& arg1, const point<Type>& arg2) {
   kgeTestPrint("called operator ==");
-  if constexpr (std::is_floating_point_v<T>) {
-    T a = arg1.x - arg2.x;
-    T b = arg1.y - arg2.y;
-    return ((std::abs(a) < 0.001) && (std::abs(b) < 0.001));
+  if constexpr (std::is_floating_point_v<Type>) {
+    Type a = arg1.x - arg2.x;
+    Type b = arg1.y - arg2.y;
+    return ((std::abs(a) < smalln) && (std::abs(b) < smalln));
   }
   return (arg1.x == arg2.x && arg1.y == arg2.y);
 }
 
-template <typename T>
-bool operator!=(const point<T>& arg1, const point<T>& arg2) {
+template <typename Type>
+bool operator!=(const point<Type>& arg1, const point<Type>& arg2) {
   kgeTestPrint("called operator !=");
-  if constexpr (std::is_floating_point_v<T>) {
-    T a = arg1.x - arg2.x;
-    T b = arg1.y - arg2.y;
-    return ((std::abs(a) > 0.001) || (std::abs(b) > 0.001));
+  if constexpr (std::is_floating_point_v<Type>) {
+    Type a = arg1.x - arg2.x;
+    Type b = arg1.y - arg2.y;
+    return ((std::abs(a) > smalln) || (std::abs(b) > smalln));
   }
   return (arg1.x != arg2.x || arg1.y != arg2.y);
 }
 
-template <typename T>
-bool operator>(const point<T>& arg1, const point<T>& arg2) {
+template <typename Type>
+bool operator>(const point<Type>& arg1, const point<Type>& arg2) {
   kgeTestPrint("called operator >");
   return (arg1.x > arg2.x && arg1.y > arg2.y);
 }
 
-template <typename T>
-bool operator<(const point<T>& arg1, const point<T>& arg2) {
+template <typename Type>
+bool operator<(const point<Type>& arg1, const point<Type>& arg2) {
   kgeTestPrint("called operator <");
   return (arg1.x < arg2.x && arg1.y < arg2.y);
 }
 
-template <typename T>
-bool operator>=(const point<T>& arg1, const point<T>& arg2) {
+template <typename Type>
+bool operator>=(const point<Type>& arg1, const point<Type>& arg2) {
   kgeTestPrint("called operator >=");
   return (arg1.x >= arg2.x && arg1.y >= arg2.y);
 }
 
-template <typename T>
-bool operator<=(const point<T>& arg1, const point<T>& arg2) {
+template <typename Type>
+bool operator<=(const point<Type>& arg1, const point<Type>& arg2) {
   kgeTestPrint("called operator <=");
   return (arg1.x <= arg2.x && arg1.y <= arg2.y);
 }
 
-template <typename T>
+template <typename Type>
 class line {
-  static_assert(std::is_floating_point<T>::value, "must be floating point type");
+  static_assert(std::is_floating_point_v<Type>, "must be floating point type");
 
  public:
-  line<T>() { kgeTestPrint("called line constructor no arguments"); }
+  line<Type>() { kgeTestPrint("called line constructor no arguments"); }
 
-  line<T>(point<T> aA, point<T> aB) : A(aA), B(aB) { kgeTestPrint("called line constructor with arguments"); }
+  line<Type>(point<Type> aA, point<Type> aB) : A(aA), B(aB) { kgeTestPrint("called line constructor with arguments"); }
 
-  line<T>(const line<T>& arg1) = default;
-  line<T>& operator=(const line<T>& arg1) = default;
-  line<T>(line&& other) noexcept = default;
-  line<T>& operator=(line<T>&& other) noexcept = default;
-  ~line<T>() = default;
+  //line<Type>(const line<Type>& arg1) = default;
+  //line<Type>& operator=(const line<Type>& arg1) = default;
+  //line<Type>(line&& other) noexcept = default;
+  //line<Type>& operator=(line<Type>&& other) noexcept = default;
 
-  T length() const {
+
+ [[nodiscard]] Type length() const {
     kgeTestPrint("called line length");
-    point<T> a = A - B;
+    point<Type> a = A - B;
     return (std::hypot(a.x, a.y));
   }
 
-  bool intersect(const line<T>& arg1) {
+  bool intersect(const line<Type>& arg1) {
     kgeTestPrint("called line intersect");
-    point<T> w = this->A - arg1.A;
-    point<T> r = arg1.B - arg1.A;
-    point<T> s = this->B - this->A;
-    T wxr = ((w.x * r.y) - (w.y * r.x));
-    T wxs = ((w.x * s.y) - (w.y * s.x));
-    T rxs = ((r.x * s.y) - (r.y * s.x));
-    if (rxs < 0.0001 && rxs > -0.0001) {
+    point<Type> w = this->A - arg1.A;
+    point<Type> r = arg1.B - arg1.A;
+    point<Type> s = this->B - this->A;
+    Type wxr = ((w.x * r.y) - (w.y * r.x));
+    Type wxs = ((w.x * s.y) - (w.y * s.x));
+    Type rxs = ((r.x * s.y) - (r.y * s.x));
+    if (rxs < smallern && rxs > (-1.0*smallern) || rxs == 0.0) {
       return false;
     }
-    T u = wxr / rxs;
-    T t = wxs / rxs;
+    Type u = wxr / rxs;
+    Type t = wxs / rxs;
     if (t <= 1.0 && t >= 0.0 && u <= 1.0 && u >= 0.0) {
-      point<T> temp = s * u;
+      point<Type> temp = s * u;
       recentIntersection = this->A + temp;
       return true;
     }
     return false;
   }
 
-  point<T> A{0, 0};
-  point<T> B{0, 0};
-  point<T> recentIntersection{0, 0};
+  point<Type> A{0, 0};
+  point<Type> B{0, 0};
+  point<Type> recentIntersection{0, 0};
 };
 
-template <typename T>
-line<T> operator+(const line<T>& arg1, const line<T>& arg2) {
+template <typename Type>
+line<Type> operator+(const line<Type>& arg1, const line<Type>& arg2) {
   kgeTestPrint("called line operator +");
-  point<T> temp = arg1.B + arg2.A;
+  point<Type> temp = arg1.B + arg2.A;
   temp = temp - arg2.B;
-  return line<T>(arg1.A, temp);
+  return line<Type>(arg1.A, temp);
 }
 
 }  // namespace kge

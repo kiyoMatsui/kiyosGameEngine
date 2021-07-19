@@ -47,6 +47,7 @@ class threadPool {
   threadPool& operator=(const threadPool& other) = delete;
   threadPool(threadPool&& other) noexcept = delete;
   threadPool& operator=(threadPool&& other) noexcept = delete;
+
   ~threadPool() {
     killFlag.exchange(true);
     for (auto& n : threads) {

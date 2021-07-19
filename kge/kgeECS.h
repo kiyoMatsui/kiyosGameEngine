@@ -24,6 +24,8 @@ http://www.apache.org/licenses/
 
 namespace kge {
 
+static constexpr unsigned int maxent = 999999;
+
 class entity {
  public:
   explicit entity(const bool aAlive, const unsigned int aID, const int aType) : alive(aAlive), ID(aID), type(aType) {}
@@ -40,7 +42,11 @@ class entity {
     return *this;
   }
   ~entity() = default;
-
+  void set(const entity& other) {
+    this->alive = other.alive;
+    this->type = other.type;
+  }
+  
   bool alive;
   const unsigned int ID;
   int type;
@@ -49,7 +55,7 @@ class entity {
 class entityHandler {
  public:
   explicit entityHandler(const std::size_t aContainerSize = 10)
-      : containerSize(aContainerSize), dummyEntity(false, 999999, -1) {
+      : containerSize(aContainerSize), dummyEntity(false, maxent, -1) {
     container.reserve(containerSize);
     deadStack.reserve(containerSize);
     for (unsigned int number = 0; number < containerSize; number++) {
@@ -62,6 +68,7 @@ class entityHandler {
   entityHandler(entityHandler&& other) noexcept = delete;
   entityHandler& operator=(entityHandler&& other) noexcept = delete;
   ~entityHandler() = default;
+
 
   entity& getItem(const unsigned int a) { return container[a]; }
   entity& getItem(const entity& ent) { return container[ent.ID]; }
@@ -142,7 +149,7 @@ class componentHandler {
     for (const auto& item : container) {
       temp.push_back(item);
     }
-    return std::move(temp);
+    return temp;
   }
   auto begin() { return container.begin(); }
   auto end() { return container.end(); }

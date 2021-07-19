@@ -253,3 +253,4 @@ TEST_CASE("line extra tests") {
   REQUIRE(c.recentIntersection.x == 6.0);
   REQUIRE(c.recentIntersection.y == 6.0);
 }
+

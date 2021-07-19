@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2021 Kiyo Matsui
-KiyosGameEngine v1.1 
+KiyosGameEngine v1.1
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -21,7 +21,7 @@ http://www.apache.org/licenses/
 namespace kge {
 
 void emscriptenTick(void* arg);
- 
+
 class abstractState {
  public:
   virtual ~abstractState() = default;
@@ -55,9 +55,9 @@ class mainLoop {
   template <typename pushedState, typename... Elements>
   void switchState(Elements... args);
 
-  abstractState* peekState() const { return stateStack.back().get(); }
+  [[nodiscard]] abstractState* peekState() const { return stateStack.back().get(); }
 
-  abstractState* peekUnderState() const { return stateStack.rbegin()[1].get(); }
+  [[nodiscard]] abstractState* peekUnderState() const { return stateStack.rbegin()[1].get(); }
 
   void run() {
     start = std::chrono::steady_clock::now();
@@ -66,14 +66,14 @@ class mainLoop {
       changeStatePtr = nullptr;
     }
 #ifdef __EMSCRIPTEN__
-    emscripten_set_main_loop_arg(emscriptenTick, this, -1, 1);	
+    emscripten_set_main_loop_arg(emscriptenTick, this, -1, 1);
 #else
     while (!stateStack.empty()) {
-      tick();  
+      tick();
     }
 #endif
   }
-  
+
   void tick() {
     auto elapsedTime = std::chrono::steady_clock::now() - start;
     start = std::chrono::steady_clock::now();
@@ -87,6 +87,7 @@ class mainLoop {
       changeStatePtr = nullptr;
     }
   }
+
  private:
   template <typename pushedState, typename... Elements>
   void pushToStack(Elements... args);
@@ -108,7 +109,7 @@ class mainLoop {
 
 #ifdef __EMSCRIPTEN__
 void emscriptenTick(void* argVoid) {
-  mainLoop* arg = static_cast<mainLoop* const>(argVoid); 
+  mainLoop* arg = static_cast<mainLoop* const>(argVoid);
   auto elapsedTime = std::chrono::steady_clock::now() - arg->start;
   arg->start = std::chrono::steady_clock::now();
   double dt_double = std::chrono::duration<double>(elapsedTime).count();

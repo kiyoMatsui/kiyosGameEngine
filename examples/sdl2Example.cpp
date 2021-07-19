@@ -281,8 +281,7 @@ class pauseState final : public kge::abstractState {
         case SDL_KEYDOWN:
           if (event.key.keysym.sym == SDLK_SPACE) {
             mMainLoopPtr->popState();
-          }
-          if (event.key.keysym.sym == SDLK_ESCAPE) {
+          } else if (event.key.keysym.sym == SDLK_ESCAPE) {
             mMainLoopPtr->popPopState();
           }
           break;
@@ -369,8 +368,7 @@ class gameState final : public kge::abstractState {
           if (event.key.keysym.sym == SDLK_SPACE) {
             mMainLoopPtr->pushState<pauseState, SDLpointers* const, kge::mainLoop* const, kge::entityHandler*,
                                     kge::componentHandler<meteorShape>*>(wPtr, mMainLoopPtr, &entities, &meteor, &position);
-          }
-          if (event.key.keysym.sym == SDLK_ESCAPE) {
+          } else if (event.key.keysym.sym == SDLK_ESCAPE) {
             mMainLoopPtr->popState();
           }
           break;
@@ -445,8 +443,7 @@ class menuState final : public kge::abstractState {
           if (event.key.keysym.sym == SDLK_SPACE) {
             mMainLoopPtr->switchState<gameState, SDLpointers* const, kge::mainLoop* const, kge::threadPool<4>* const>(
               wPtr, mMainLoopPtr, mTpPtr);
-          }
-          if (event.key.keysym.sym == SDLK_ESCAPE) {
+          } else if (event.key.keysym.sym == SDLK_ESCAPE) {
             mMainLoopPtr->popState();
           }
           break;
