@@ -1,6 +1,6 @@
 /*-------------------------------*\
-Copyright 2020 Kiyo Matsui
-KiyosGameEngine v1.0 
+Copyright 2021 Kiyo Matsui
+KiyosGameEngine v1.2 
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -24,26 +24,20 @@ struct testComponent {
 
 TEST_CASE("test entity constructor and copy/move constructors and copy/move assignment ") {
   kge::entity a(true, 7, 1);
-  kge::entity b(a);
+  kge::entity b(false, 8, 12);
+  b.set(a);
   REQUIRE(b.alive == true);
-  REQUIRE(b.ID == 7);
+  REQUIRE(b.ID == 8);
   REQUIRE(b.type == 1);
-  kge::entity c(std::move(a));
+  kge::entity c(a);
   REQUIRE(c.alive == true);
   REQUIRE(c.ID == 7);
   REQUIRE(c.type == 1);
 
-  kge::entity newE1(false, 8, 2);
-  b = newE1;
-  REQUIRE(b.alive == false);
-  REQUIRE(b.ID == 7);
-  REQUIRE(b.type == 2);
-
-  kge::entity newE2(true, 9, 3);
-  b = std::move(newE2);
-  REQUIRE(b.alive == true);
-  REQUIRE(b.ID == 7);
-  REQUIRE(b.type == 3);
+  kge::entity d(std::move(b));
+  REQUIRE(d.alive == true);
+  REQUIRE(d.ID == 8);
+  REQUIRE(d.type == 1);
 }
 
 TEST_CASE("test entityHandler and componentHandler") {

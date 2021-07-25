@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2021 Kiyo Matsui
-KiyosGameEngine v1.1 
+KiyosGameEngine v1.2 
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -8,7 +8,7 @@ http://www.apache.org/licenses/
 
 #ifndef KGE_POINTLINE_H
 #define KGE_POINTLINE_H
-
+#include <iostream>
 #include <cmath>
 
 #ifdef USED_FOR_KGE_TESTS
@@ -19,8 +19,8 @@ http://www.apache.org/licenses/
 
 namespace kge {
 
-static constexpr float smalln = 0.001;
-static constexpr float smallern = 0.0001;  
+static constexpr double smalln = 0.001;
+static constexpr double smallern = 0.0001;  
   
 template <typename Type>
 class point {
@@ -217,15 +217,15 @@ class line {
     return (std::hypot(a.x, a.y));
   }
 
-  bool intersect(const line<Type>& arg1) {
-    kgeTestPrint("called line intersect");
+  bool intersects(const line<Type>& arg1) {
+    kgeTestPrint("called line intersects");
     point<Type> w = this->A - arg1.A;
     point<Type> r = arg1.B - arg1.A;
     point<Type> s = this->B - this->A;
     Type wxr = ((w.x * r.y) - (w.y * r.x));
     Type wxs = ((w.x * s.y) - (w.y * s.x));
     Type rxs = ((r.x * s.y) - (r.y * s.x));
-    if (rxs < smallern && rxs > (-1.0*smallern) || rxs == 0.0) {
+    if ((rxs < smallern && rxs > (-1.0*smallern)) || rxs == 0.0) {
       return false;
     }
     Type u = wxr / rxs;
@@ -236,6 +236,18 @@ class line {
       return true;
     }
     return false;
+  }
+  
+  bool intersects(const point<Type>& arg1, Type distance) {
+    kgeTestPrint("called line intersects with point at distance");
+    Type dx = this->A.x - this->B.x;
+    Type dy = this->A.y - this->B.y;
+    Type scale = std::hypot(dx, dy)/distance;
+    dx /= scale;
+    dy /= scale;
+    point<Type> pointDx ((arg1.x + dy), (arg1.y - dx));
+    point<Type> pointDy ((arg1.x - dy), (arg1.y + dx));
+    return intersects(line<Type>(pointDx, pointDy));
   }
 
   point<Type> A{0, 0};

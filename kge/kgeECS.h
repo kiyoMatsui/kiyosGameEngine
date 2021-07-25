@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2021 Kiyo Matsui
-KiyosGameEngine v1.1
+KiyosGameEngine v1.2
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -30,17 +30,9 @@ class entity {
  public:
   explicit entity(const bool aAlive, const unsigned int aID, const int aType) : alive(aAlive), ID(aID), type(aType) {}
   entity(const entity& other) = default;
-  entity& operator=(const entity& other) {
-    this->alive = other.alive;
-    this->type = other.type;
-    return *this;
-  }
+  entity& operator=(const entity& other) = delete;
   entity(entity&& other) noexcept = default;
-  entity& operator=(entity&& other) noexcept {
-    this->alive = other.alive;
-    this->type = other.type;
-    return *this;
-  }
+  entity& operator=(entity&& other) noexcept = delete;
   ~entity() = default;
   void set(const entity& other) {
     this->alive = other.alive;
@@ -76,7 +68,7 @@ class entityHandler {
     if (!deadStack.empty()) {
       unsigned int id = deadStack.back();
       deadStack.pop_back();
-      container[id] = entity(true, id, type);
+      container[id].set(entity(true, id, type));
       return container[id];
     }
     return dummyEntity;
@@ -91,8 +83,8 @@ class entityHandler {
     deadStack.push_back(ent.ID);
   }
 
-  auto begin() { return container.begin(); }
-  auto end() { return container.end(); }
+  [[nodiscard]] auto begin() const { return container.begin(); }
+  [[nodiscard]] auto end() const { return container.end(); }
 
   template <typename Function>
   void for_each(Function f) {
@@ -144,15 +136,11 @@ class componentHandler {
     }
     return container[ent.ID];
   }
-  std::vector<component> getData() {
-    std::vector<component> temp;
-    for (const auto& item : container) {
-      temp.push_back(item);
-    }
-    return temp;
+  [[nodiscard]] std::vector<component> getData() const {
+    return container;
   }
-  auto begin() { return container.begin(); }
-  auto end() { return container.end(); }
+  [[nodiscard]] auto begin() const { return container.begin(); }
+  [[nodiscard]] auto end() const { return container.end(); }
 
   const std::size_t containerSize;
 

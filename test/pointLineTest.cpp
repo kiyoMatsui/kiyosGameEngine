@@ -1,6 +1,6 @@
 /*-------------------------------*\
-Copyright 2020 Kiyo Matsui
-KiyosGameEngine v1.0 
+Copyright 2021 Kiyo Matsui
+KiyosGameEngine v1.2 
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -209,7 +209,7 @@ TEST_CASE("line method tests") {
   REQUIRE(g.A == c.A);
   REQUIRE(g.B.x == 1.0);
   REQUIRE(g.B.y == 21.0);
-  REQUIRE(c.intersect(f) == true);
+  REQUIRE(c.intersects(f) == true);
   REQUIRE(c.recentIntersection.x == 6.0);
   REQUIRE(c.recentIntersection.y == 6.0);
 }
@@ -227,7 +227,7 @@ TEST_CASE("line not intersecting tests") {
   REQUIRE(g.A == c.A);
   REQUIRE(g.B.x == 10.0);
   REQUIRE(g.B.y == 12.0);
-  REQUIRE(c.intersect(f) == false);
+  REQUIRE(c.intersects(f) == false);
 }
 
 TEST_CASE("line parallel tests") {
@@ -237,7 +237,7 @@ TEST_CASE("line parallel tests") {
   kge::point<double> d(2, 2);
   kge::point<double> e(12, 12);
   kge::line<double> f(d, e);
-  REQUIRE(c.intersect(f) == false);
+  REQUIRE(c.intersects(f) == false);
 }
 
 TEST_CASE("line extra tests") {
@@ -247,10 +247,18 @@ TEST_CASE("line extra tests") {
   kge::point<double> d(11, 1);
   kge::point<double> e(1, 11);
   kge::line<double> f(d, e);
+  kge::point<double> g(13, 12);
   REQUIRE(c.length() < 14.15);
   REQUIRE(c.length() > 14.13);
-  REQUIRE(c.intersect(f) == true);
+  REQUIRE(c.intersects(f) == true);
   REQUIRE(c.recentIntersection.x == 6.0);
   REQUIRE(c.recentIntersection.y == 6.0);
+  REQUIRE(c.intersects(d, 7) == false);
+  REQUIRE(c.intersects(d, 8) == true);
+  REQUIRE(c.intersects(e, 7) == false);
+  REQUIRE(c.intersects(e, 8) == true);
+  REQUIRE(c.recentIntersection.x == 6.0);
+  REQUIRE(c.recentIntersection.y == 6.0);
+  REQUIRE(c.intersects(g, 99) == false);
 }
 

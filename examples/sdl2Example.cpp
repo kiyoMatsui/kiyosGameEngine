@@ -1,3 +1,12 @@
+/*-------------------------------*\
+Copyright 2021 Kiyo Matsui
+KiyosGameEngine v1.2 
+Apache License
+Version 2.0, January 2004
+http://www.apache.org/licenses/
+\*-------------------------------*/
+
+//g++ -g ./sdl2Example.cpp -w -lSDL2 -lSDL2_ttf -std=c++17 -pthread -o sdl2Example
 #include <cmath>
 #include <memory>
 #include <random>
@@ -13,7 +22,7 @@
 #include "../kge/kgeMainLoop.h"
 #include "../kge/kgePointLine.h"
 #include "../kge/kgeThreadPool.h"
-//g++ -g ./sdl2Example.cpp -w -lSDL2 -lSDL2_ttf -std=c++17 -pthread -o sdl2Example
+
 extern constexpr int WIDTH = 640;
 extern constexpr int HEIGHT = 360;
 

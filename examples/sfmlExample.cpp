@@ -1,6 +1,6 @@
 /*-------------------------------*\
-Copyright 2020 Kiyo Matsui
-KiyosGameEngine v1.0 
+Copyright 2021 Kiyo Matsui
+KiyosGameEngine v1.2 
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -23,8 +23,8 @@ http://www.apache.org/licenses/
 #include "kgeThreadPool.h"
 
 // Entities
-#define startEntity 1
-#define builtEntity 2
+extern constexpr unsigned int startEntity = 1;
+extern constexpr unsigned int builtEntity = 2;
 
 // Component (others are points, this one is a little bigger).
 class bodyData {
