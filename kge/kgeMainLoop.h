@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2021 Kiyo Matsui
-KiyosGameEngine v1.2
+KiyosGameEngine v1.3
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -108,7 +108,7 @@ class mainLoop {
 };
 
 #ifdef __EMSCRIPTEN__
-void emscriptenTick(void* argVoid) {
+inline void emscriptenTick(void* argVoid) {
   mainLoop* arg = static_cast<mainLoop* const>(argVoid);
   auto elapsedTime = std::chrono::steady_clock::now() - arg->start;
   arg->start = std::chrono::steady_clock::now();
