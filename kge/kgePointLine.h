@@ -8,8 +8,8 @@ http://www.apache.org/licenses/
 
 #ifndef KGE_POINTLINE_H
 #define KGE_POINTLINE_H
-#include <iostream>
 #include <cmath>
+#include <iostream>
 
 #ifdef USED_FOR_KGE_TESTS
 #define kgeTestPrint(x) std::cout << x << std::endl
@@ -20,8 +20,8 @@ http://www.apache.org/licenses/
 namespace kge {
 
 static constexpr double smalln = 0.001;
-static constexpr double smallern = 0.0001;  
-  
+static constexpr double smallern = 0.0001;
+
 template <typename Type>
 class point {
   static_assert(std::is_arithmetic_v<Type>, "must be arithmetic type / useful fundamental type");
@@ -31,10 +31,10 @@ class point {
 
   point<Type>(Type ax, Type ay) : x(ax), y(ay) { kgeTestPrint("called constructor with arguments"); }
 
-  //point<Type>(const point<Type>& arg1) = default;
-  //point<Type>& operator=(const point<Type>& arg1) = default;
-  //point<Type>(point<Type>&& other) noexcept = default;
-  //point<Type>& operator=(point<Type>&& other) noexcept = default;
+  // point<Type>(const point<Type>& arg1) = default;
+  // point<Type>& operator=(const point<Type>& arg1) = default;
+  // point<Type>(point<Type>&& other) noexcept = default;
+  // point<Type>& operator=(point<Type>&& other) noexcept = default;
 
   Type x{0};
   Type y{0};
@@ -99,6 +99,14 @@ class point {
     kgeTestPrint("called length");
     point<Type> a = *this - arg1;
     return (std::hypot(a.x, a.y));
+  }
+  [[nodiscard]] Type length() const {
+    kgeTestPrint("called length");
+    return (std::hypot(x, y));
+  }
+  [[nodiscard]] point<Type> unitVector() const {
+    kgeTestPrint("called unitVector");
+    return {x / std::hypot(x, y), y / std::hypot(x, y)};
   }
 };
 
@@ -197,6 +205,13 @@ bool operator<=(const point<Type>& arg1, const point<Type>& arg2) {
 }
 
 template <typename Type>
+class intersectionResult {
+ public:
+  bool flag{false};
+  point<Type> intersection{0, 0};
+};
+
+template <typename Type>
 class line {
   static_assert(std::is_floating_point_v<Type>, "must be floating point type");
 
@@ -205,19 +220,18 @@ class line {
 
   line<Type>(point<Type> aA, point<Type> aB) : A(aA), B(aB) { kgeTestPrint("called line constructor with arguments"); }
 
-  //line<Type>(const line<Type>& arg1) = default;
-  //line<Type>& operator=(const line<Type>& arg1) = default;
-  //line<Type>(line&& other) noexcept = default;
-  //line<Type>& operator=(line<Type>&& other) noexcept = default;
+  // line<Type>(const line<Type>& arg1) = default;
+  // line<Type>& operator=(const line<Type>& arg1) = default;
+  // line<Type>(line&& other) noexcept = default;
+  // line<Type>& operator=(line<Type>&& other) noexcept = default;
 
-
- [[nodiscard]] Type length() const {
+  [[nodiscard]] Type length() const {
     kgeTestPrint("called line length");
     point<Type> a = A - B;
     return (std::hypot(a.x, a.y));
   }
 
-  bool intersects(const line<Type>& arg1) {
+  intersectionResult<Type> intersects(const line<Type>& arg1) {
     kgeTestPrint("called line intersects");
     point<Type> w = this->A - arg1.A;
     point<Type> r = arg1.B - arg1.A;
@@ -225,34 +239,33 @@ class line {
     Type wxr = ((w.x * r.y) - (w.y * r.x));
     Type wxs = ((w.x * s.y) - (w.y * s.x));
     Type rxs = ((r.x * s.y) - (r.y * s.x));
-    if ((rxs < smallern && rxs > (-1.0*smallern)) || rxs == 0.0) {
-      return false;
+    if ((rxs < smallern && rxs > (-1.0 * smallern)) || rxs == 0.0) {
+      return {false, {0.0, 0.0}};
     }
     Type u = wxr / rxs;
     Type t = wxs / rxs;
     if (t <= 1.0 && t >= 0.0 && u <= 1.0 && u >= 0.0) {
       point<Type> temp = s * u;
-      recentIntersection = this->A + temp;
-      return true;
+      // recentIntersection = this->A + temp;
+      return {true, this->A + temp};
     }
-    return false;
+    return {false, {0.0, 0.0}};
   }
-  
-  bool intersects(const point<Type>& arg1, Type distance) {
+
+  intersectionResult<Type> intersects(const point<Type>& arg1, Type distance) {
     kgeTestPrint("called line intersects with point at distance");
     Type dx = this->A.x - this->B.x;
     Type dy = this->A.y - this->B.y;
-    Type scale = std::hypot(dx, dy)/distance;
+    Type scale = std::hypot(dx, dy) / distance;
     dx /= scale;
     dy /= scale;
-    point<Type> pointDx ((arg1.x + dy), (arg1.y - dx));
-    point<Type> pointDy ((arg1.x - dy), (arg1.y + dx));
+    point<Type> pointDx((arg1.x + dy), (arg1.y - dx));
+    point<Type> pointDy((arg1.x - dy), (arg1.y + dx));
     return intersects(line<Type>(pointDx, pointDy));
   }
 
   point<Type> A{0, 0};
   point<Type> B{0, 0};
-  point<Type> recentIntersection{0, 0};
 };
 
 template <typename Type>
