@@ -67,13 +67,13 @@ class threadPool {
   bool tryJob() {
     std::function<void()> job;
     {
-      std::unique_lock<std::mutex> lk(m);
-      cv.wait(lk, [this]{return !(jobQueue.empty()) || killFlag.load(); });
-      if (killFlag.load()) {
+      std::lock_guard<std::mutex> lock(m);
+      if (!jobQueue.empty()) {
+        job = jobQueue.front();
+        jobQueue.pop();
+      } else {
         return false;
       }
-      job = jobQueue.front();
-      jobQueue.pop();
     }
     job();
     return true;

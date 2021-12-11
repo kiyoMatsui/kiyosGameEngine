@@ -3,7 +3,7 @@ kiyoGameEngine (kge) is a small header only C++17 library, that provides boilerp
 
 ## Install
 Just include the kge header files in your project to include kge. Examples and tests build on Ubuntu 18/04 and Windows 10 using Visual Studio. The example requires SFML and CMake. The easiest way to build on windows is to use Conan so it can pull in SFML when using CMake. One way of doing this is to install Chocolatey on Windows and then use Powershell to install CMake and Python, then use Python to install Conan (Make sure Visual Studio installs MSVC).
-For the web, install emscripten and then read and run the ./s/emscriptenBuild.sh script that builds all the assets for the index.html to display a working example).
+For the web, install emscripten and then read and run the ./s/emscriptenBuild.sh script. This builds all the assets for the index.html that will display a working example.
 
 ## To use 
 Just look at the examples to get up and running with kge, the header files are small and simple and are independent of each other. The templates are digestible, so it shouldn't take too long to work out what's going on. 

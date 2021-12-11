@@ -18,9 +18,7 @@ http://www.apache.org/licenses/
 
 TEST_CASE("point test constructor and copy/move constructor test") {
   kge::point<int> a(1, 2);
-  kge::point<float> b;
   kge::point<unsigned int> c(1, 2);
-  kge::point<unsigned int> d(c);
   kge::point<unsigned int> e(c);
   REQUIRE(e.x == 1);
   REQUIRE(e.y == 2);
@@ -169,17 +167,17 @@ TEST_CASE("point test int < & <= operator") {
 }
 
 TEST_CASE("test float != and == operator") {
-  kge::point<float> a(10.0001, 22.0001);
-  kge::point<float> b(10.0002, 21.99999);
-  kge::point<float> c(10.0102, 21.99999);
+  kge::point<float> a(10.0001f, 22.0001f);
+  kge::point<float> b(10.0002f, 21.99999f);
+  kge::point<float> c(10.0102f, 21.99999f);
   REQUIRE(a == b);
   REQUIRE(c != b);
   REQUIRE(c != a);
 }
 
 TEST_CASE("line test constructor and copy/move constructor and assignment") {
-  kge::point<float> a(2, 2);
-  kge::point<float> b(12, 22);
+  kge::point<float> a(2.0f, 2.0f);
+  kge::point<float> b(12.0f, 22.0f);
   kge::line<float> c(a, b);
   kge::line<float> d(c);
   REQUIRE(d.A == c.A);
@@ -197,68 +195,68 @@ TEST_CASE("line test constructor and copy/move constructor and assignment") {
 }
 
 TEST_CASE("line method tests") {
-  kge::point<float> a(1, 1);
-  kge::point<float> b(11, 11);
+  kge::point<float> a(1.0f, 1.0f);
+  kge::point<float> b(11.0f, 11.0f);
   kge::line<float> c(a, b);
-  kge::point<float> d(1, 11);
-  kge::point<float> e(11, 1);
+  kge::point<float> d(1.0f, 11.0f);
+  kge::point<float> e(11.0f, 1.0f);
   kge::line<float> f(d, e);
-  REQUIRE(c.length() < 14.15);
-  REQUIRE(c.length() > 14.13);
+  REQUIRE(c.length() < 14.15f);
+  REQUIRE(c.length() > 14.13f);
   kge::line<float> g = c + f;
   REQUIRE(g.A == c.A);
-  REQUIRE(g.B.x == 1.0);
-  REQUIRE(g.B.y == 21.0);
+  REQUIRE(g.B.x == 1.0f);
+  REQUIRE(g.B.y == 21.0f);
   REQUIRE(c.intersects(f).flag == true);
-  REQUIRE(c.intersects(f).intersection.x == 6.0);
-  REQUIRE(c.intersects(f).intersection.y == 6.0);
+  REQUIRE(c.intersects(f).intersection.x == 6.0f);
+  REQUIRE(c.intersects(f).intersection.y == 6.0f);
 }
 
 TEST_CASE("line not intersecting tests") {
-  kge::point<float> a(1, 1);
-  kge::point<float> b(11, 11);
+  kge::point<float> a(1.0f, 1.0f);
+  kge::point<float> b(11.0f, 11.0f);
   kge::line<float> c(a, b);
-  kge::point<float> d(1, 11);
-  kge::point<float> e(2, 10);
+  kge::point<float> d(1.0f, 11.0f);
+  kge::point<float> e(2.0f, 10.0f);
   kge::line<float> f(d, e);
-  REQUIRE(c.length() < 14.15);
-  REQUIRE(c.length() > 14.13);
+  REQUIRE(c.length() < 14.15f);
+  REQUIRE(c.length() > 14.13f);
   kge::line<float> g = c + f;
   REQUIRE(g.A == c.A);
-  REQUIRE(g.B.x == 10.0);
-  REQUIRE(g.B.y == 12.0);
+  REQUIRE(g.B.x == 10.0f);
+  REQUIRE(g.B.y == 12.0f);
   REQUIRE(c.intersects(f).flag == false);
 }
 
 TEST_CASE("line parallel tests") {
-  kge::point<float> a(1, 1);
-  kge::point<float> b(11, 11);
+  kge::point<float> a(1.0f, 1.0f);
+  kge::point<float> b(11.0f, 11.0f);
   kge::line<float> c(a, b);
-  kge::point<float> d(2, 2);
-  kge::point<float> e(12, 12);
+  kge::point<float> d(2.0f, 2.0f);
+  kge::point<float> e(12.0f, 12.0f);
   kge::line<float> f(d, e);
   REQUIRE(c.intersects(f).flag == false);
 }
 
 TEST_CASE("line extra tests") {
-  kge::point<float> a(11, 11);
-  kge::point<float> b(1, 1);
+  kge::point<float> a(11.0f, 11.0f);
+  kge::point<float> b(1.0f, 1.0f);
   kge::line<float> c(a, b);
-  kge::point<float> d(11, 1);
-  kge::point<float> e(1, 11);
+  kge::point<float> d(11.0f, 1.0f);
+  kge::point<float> e(1.0f, 11.0f);
   kge::line<float> f(d, e);
-  kge::point<float> g(13, 12);
-  REQUIRE(c.length() < 14.15);
-  REQUIRE(c.length() > 14.13);
+  kge::point<float> g(13.0f, 12.0f);
+  REQUIRE(c.length() < 14.15f);
+  REQUIRE(c.length() > 14.13f);
   REQUIRE(c.intersects(f).flag == true);
-  REQUIRE(c.intersects(f).intersection.x == 6.0);
-  REQUIRE(c.intersects(f).intersection.y == 6.0);
+  REQUIRE(c.intersects(f).intersection.x == 6.0f);
+  REQUIRE(c.intersects(f).intersection.y == 6.0f);
   REQUIRE(c.intersects(d, 7).flag == false);
   REQUIRE(c.intersects(d, 8).flag == true);
   REQUIRE(c.intersects(e, 7).flag == false);
   REQUIRE(c.intersects(e, 8).flag == true);
-  REQUIRE(c.intersects(f).intersection.x == 6.0);
-  REQUIRE(c.intersects(f).intersection.y == 6.0);
+  REQUIRE(c.intersects(f).intersection.x == 6.0f);
+  REQUIRE(c.intersects(f).intersection.y == 6.0f);
   REQUIRE(c.intersects(g, 99).flag == false);
 }
 
