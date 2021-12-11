@@ -3,7 +3,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.5)
 PROJECT(kiyosGameEngine)
 
 SET(APPLICATION_NAME "kiyosGameEngine")
-SET(APPLICATION_VERSION_STRING 1.0)
+SET(APPLICATION_VERSION_STRING 2.0)
 
 ## Project Output Paths
 SET(MAINFOLDER ${PROJECT_SOURCE_DIR})
@@ -40,6 +40,8 @@ INCLUDE(CxxFlags)
 #debug
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG} -std=c++17 -pthread")
 
+#address sanitizer
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fsanitize=address -g -O1")
 #thread sanitizer
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fsanitize=thread -g -O1")
 

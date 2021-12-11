@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2021 Kiyo Matsui
-KiyosGameEngine v1.3
+KiyosGameEngine v2.0
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -19,8 +19,8 @@ http://www.apache.org/licenses/
 
 namespace kge {
 
-static constexpr double smalln = 0.001;
-static constexpr double smallern = 0.0001;
+static constexpr float smalln = 0.001f;
+static constexpr float smallern = 0.0001f;
 
 template <typename Type>
 class point {
@@ -239,17 +239,17 @@ class line {
     Type wxr = ((w.x * r.y) - (w.y * r.x));
     Type wxs = ((w.x * s.y) - (w.y * s.x));
     Type rxs = ((r.x * s.y) - (r.y * s.x));
-    if ((rxs < smallern && rxs > (-1.0 * smallern)) || rxs == 0.0) {
-      return {false, {0.0, 0.0}};
+    if ((rxs < smallern && rxs > (-1.0f * smallern)) || rxs == 0.0f) {
+      return {false, {0.0f, 0.0f}};
     }
     Type u = wxr / rxs;
     Type t = wxs / rxs;
-    if (t <= 1.0 && t >= 0.0 && u <= 1.0 && u >= 0.0) {
+    if (t <= 1.0f && t >= 0.0f && u <= 1.0f && u >= 0.0f) {
       point<Type> temp = s * u;
       // recentIntersection = this->A + temp;
       return {true, this->A + temp};
     }
-    return {false, {0.0, 0.0}};
+    return {false, {0.0f, 0.0f}};
   }
 
   intersectionResult<Type> intersects(const point<Type>& arg1, Type distance) {

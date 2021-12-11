@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2021 Kiyo Matsui
-KiyosGameEngine v1.3
+KiyosGameEngine v2.0
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -12,6 +12,7 @@ http://www.apache.org/licenses/
 #include <atomic>
 #include <functional>
 #include <mutex>
+#include <condition_variable>
 #include <queue>
 #include <thread>
 #include <vector>
@@ -25,19 +26,17 @@ class threadPool {
     for (unsigned i = 0; i < N; ++i) {
       threads.emplace_back([=]() {
         for (;;) {
-          m.lock();
-          if (jobQueue.empty()) {
-            m.unlock();
+          std::function<void()> job;
+          {
+            std::unique_lock<std::mutex> lk(m);
+            cv.wait(lk, [this]{return !(jobQueue.empty()) || killFlag.load(); });
             if (killFlag.load()) {
               break;
             }
-            std::this_thread::yield();
-          } else {
-            std::function<void()> job = jobQueue.front();
+            job = jobQueue.front();
             jobQueue.pop();
-            m.unlock();
-            job();
           }
+          job();
         }
       });
     }
@@ -50,6 +49,7 @@ class threadPool {
 
   ~threadPool() {
     killFlag.exchange(true);
+    cv.notify_all();
     for (auto& n : threads) {
       n.join();
     }
@@ -57,19 +57,24 @@ class threadPool {
 
   template <typename FunctionType>
   void submitJob(FunctionType functor) {
-    std::lock_guard<std::mutex> lock(m);
-    jobQueue.push(std::function<void()>(functor));
+    {
+      std::lock_guard<std::mutex> lock(m);
+      jobQueue.push(std::function<void()>(functor));
+    }
+    cv.notify_one();
   }
 
   bool tryJob() {
-    m.lock();
-    if (jobQueue.empty()) {
-      m.unlock();
-      return false;
+    std::function<void()> job;
+    {
+      std::unique_lock<std::mutex> lk(m);
+      cv.wait(lk, [this]{return !(jobQueue.empty()) || killFlag.load(); });
+      if (killFlag.load()) {
+        return false;
+      }
+      job = jobQueue.front();
+      jobQueue.pop();
     }
-    std::function<void()> job = jobQueue.front();
-    jobQueue.pop();
-    m.unlock();
     job();
     return true;
   }
@@ -78,6 +83,7 @@ class threadPool {
   std::queue<std::function<void()>> jobQueue;
   std::vector<std::thread> threads;
   mutable std::mutex m;
+  std::condition_variable cv;
   std::atomic_bool killFlag{false};
 };
 

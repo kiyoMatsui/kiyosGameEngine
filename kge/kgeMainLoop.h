@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2021 Kiyo Matsui
-KiyosGameEngine v1.3
+KiyosGameEngine v2.0
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -25,8 +25,8 @@ void emscriptenTick(void* arg);
 class abstractState {
  public:
   virtual ~abstractState() = default;
-  virtual void render(double dt) = 0;
-  virtual void update(double dt) = 0;
+  virtual void render(float dt) = 0;
+  virtual void update(float dt) = 0;
   virtual void processEvents() = 0;
 };
 
@@ -59,6 +59,8 @@ class mainLoop {
 
   [[nodiscard]] abstractState* peekUnderState() const { return stateStack.rbegin()[1].get(); }
 
+  [[nodiscard]] abstractState* peekUnderStatex2() const { return stateStack.rbegin()[2].get(); }
+
   void run() {
     start = std::chrono::steady_clock::now();
     if (changeStatePtr) {
@@ -77,15 +79,22 @@ class mainLoop {
   void tick() {
     auto elapsedTime = std::chrono::steady_clock::now() - start;
     start = std::chrono::steady_clock::now();
-    double dt_double = std::chrono::duration<double>(elapsedTime).count();
+    float dt_float = std::chrono::duration<float>(elapsedTime).count();
     stateStack.back()->processEvents();
-    stateStack.back()->update(dt_double);
-    stateStack.back()->render(dt_double);
+    stateStack.back()->update(dt_float);
+    stateStack.back()->render(dt_float);
 
     if (changeStatePtr) {
       (*changeStatePtr)();
       changeStatePtr = nullptr;
     }
+  }
+
+  bool isChangingState() {
+    if(changeStatePtr) {
+      return true;
+    }
+    return false;
   }
 
  private:
@@ -112,10 +121,10 @@ inline void emscriptenTick(void* argVoid) {
   mainLoop* arg = static_cast<mainLoop* const>(argVoid);
   auto elapsedTime = std::chrono::steady_clock::now() - arg->start;
   arg->start = std::chrono::steady_clock::now();
-  double dt_double = std::chrono::duration<double>(elapsedTime).count();
+  float dt_float = std::chrono::duration<float>(elapsedTime).count();
   arg->stateStack.back()->processEvents();
-  arg->stateStack.back()->update(dt_double);
-  arg->stateStack.back()->render(dt_double);
+  arg->stateStack.back()->update(dt_float);
+  arg->stateStack.back()->render(dt_float);
 
   if (arg->changeStatePtr) {
     (*(arg->changeStatePtr))();

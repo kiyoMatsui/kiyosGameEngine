@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2021 Kiyo Matsui
-KiyosGameEngine v1.3
+KiyosGameEngine v2.0
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -154,7 +154,7 @@ class updater {
  public:
   explicit updater(systems&... args) : systemsTuple(std::tie(args...)) { kgeTestPrint("cleanUpSystem constructor"); }
 
-  int update(double dt) {
+  int update(float dt) {
     eachSystem<sizeof...(systems) - 1>(dt);
     return 1;
   }
@@ -163,7 +163,7 @@ class updater {
   std::tuple<systems&...> systemsTuple;
 
   template <unsigned n>
-  void eachSystem(double dt) {
+  void eachSystem(float dt) {
     std::get<n>(systemsTuple).update(dt);
     if constexpr (n > 0) {
       eachSystem<n - 1>(dt);

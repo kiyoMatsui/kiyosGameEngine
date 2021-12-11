@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2021 Kiyo Matsui
-KiyosGameEngine v1.3
+KiyosGameEngine v2.0
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -39,12 +39,12 @@ struct SDLpointers {
 class bodyData {
  public:
   bodyData() {}
-  bodyData(double mMass, double aAccelerationX, double aAccelerationY, double aVelocityX, double aVelocityY)
+  bodyData(float mMass, float aAccelerationX, float aAccelerationY, float aVelocityX, float aVelocityY)
       : mass(mMass), acceleration(aAccelerationX, aAccelerationY), velocity(aVelocityX, aVelocityY) {}
 
-  double mass{0};
-  kge::point<double> acceleration{0, 0};
-  kge::point<double> velocity{0, 0};
+  float mass{0};
+  kge::point<float> acceleration{0, 0};
+  kge::point<float> velocity{0, 0};
 };
 
 class meteorShape {
@@ -70,11 +70,11 @@ class meteorShape {
 class movementSystem {
  public:
   movementSystem(SDLpointers* const aPtr, kge::entityHandler& aEntities,
-                 kge::componentHandler<kge::point<double>>& aPosition, kge::componentHandler<bodyData>& aBody,
+                 kge::componentHandler<kge::point<float>>& aPosition, kge::componentHandler<bodyData>& aBody,
                  kge::threadPool<4>* const atpPtr)
       : screenSize(WIDTH, HEIGHT), entities(aEntities), position(aPosition), body(aBody), mTpPtr(atpPtr) {}
 
-  void updateBlock(const double dt, const int size, const int threadNo, bool endFlag = false) {
+  void updateBlock(const float dt, const int size, const int threadNo, bool endFlag = false) {
     std::random_device rnd;
     std::mt19937 rng(rnd());
     std::uniform_int_distribution<int> r0(0, 9);
@@ -93,7 +93,7 @@ class movementSystem {
             if (entities.getItem(iter2->ID).alive && iter2->ID != iter->ID) {
               kge::line temp(copyCont[iter->ID], copyCont[iter2->ID]);
               if (temp.length() < 20.0) {
-                kge::point<double> directionVec = copyCont[iter->ID] - copyCont[iter2->ID];
+                kge::point<float> directionVec = copyCont[iter->ID] - copyCont[iter2->ID];
                 body.getItem(iter->ID).velocity +=
                   ((directionVec /= std::hypot(directionVec.x, directionVec.y)) * (1000 / temp.length()));
               }
@@ -134,7 +134,7 @@ class movementSystem {
     sync--;
   }
 
-  int update(const double dt) {
+  int update(const float dt) {
     copyCont = position.getData();
 
     unsigned int block = static_cast<unsigned int>(entities.containerSize) / 4;
@@ -157,25 +157,25 @@ class movementSystem {
   }
 
  private:
-  kge::point<double> screenSize;
+  kge::point<float> screenSize;
   kge::entityHandler& entities;
-  kge::componentHandler<kge::point<double>>& position;
+  kge::componentHandler<kge::point<float>>& position;
   kge::componentHandler<bodyData>& body;
   kge::threadPool<4>* const mTpPtr;
   std::unordered_set<unsigned int> mKillSet;
   mutable std::mutex mKillSetMutex;
   std::atomic_int sync{0};
   std::atomic_int var{0};
-  std::vector<kge::point<double>> copyCont;
+  std::vector<kge::point<float>> copyCont;
 };
 
 class renderSystem {
  public:
   renderSystem(SDLpointers* const aPtr, kge::entityHandler& aEntities,
-               kge::componentHandler<kge::point<double>>& aPosition, kge::componentHandler<meteorShape>& aMeteor)
+               kge::componentHandler<kge::point<float>>& aPosition, kge::componentHandler<meteorShape>& aMeteor)
       : wPtr(aPtr), entities(aEntities), position(aPosition), meteor(aMeteor) {}
 
-  int update(const double dt) {
+  int update(const float dt) {
     timer += dt;
     if (timer > 3.0) {
       entities.for_each_type(2, [&](auto& ent) {
@@ -205,9 +205,9 @@ class renderSystem {
  private:
   SDLpointers* const wPtr;
   kge::entityHandler& entities;
-  kge::componentHandler<kge::point<double>>& position;
+  kge::componentHandler<kge::point<float>>& position;
   kge::componentHandler<meteorShape>& meteor;
-  double timer{0};
+  float timer{0};
 };
 
 // spawn system
@@ -215,34 +215,34 @@ class renderSystem {
 class spawnSystem {
  public:
   spawnSystem(SDLpointers* const aPtr, kge::entityHandler& aEntities,
-              kge::componentHandler<kge::point<double>>& aPosition, kge::componentHandler<bodyData>& aBody,
+              kge::componentHandler<kge::point<float>>& aPosition, kge::componentHandler<bodyData>& aBody,
               kge::componentHandler<meteorShape>& aMeteor)
       : screenSize(WIDTH, HEIGHT), entities(aEntities), position(aPosition), body(aBody), meteor(aMeteor) {}
 
-  int update(const double /*unused*/) {
+  int update(const float /*unused*/) {
     for (auto& j : spawnStack) {
       unsigned int builtID = entities.build(builtEntity).ID;
       std::random_device rnd;
       std::mt19937 rng(rnd());
-      std::uniform_real_distribution<double> r0(10, screenSize.x - 10);
-      std::uniform_real_distribution<double> r1(10, screenSize.y - 10);
+      std::uniform_real_distribution<float> r0(10, screenSize.x - 10);
+      std::uniform_real_distribution<float> r1(10, screenSize.y - 10);
       std::uniform_real_distribution<float> r3(-2000, 2000);
-      position.getItem(builtID) = kge::point<double>(j.x, j.y);
+      position.getItem(builtID) = kge::point<float>(j.x, j.y);
       body.getItem(builtID) = bodyData(1.0, r3(rng), r3(rng), 0.0, 0.0);
       meteor.getItem(builtID).create();
     }
     spawnStack.clear();
     return 1;
   }
-  std::vector<kge::point<double>> spawnStack;
+  std::vector<kge::point<float>> spawnStack;
 
  private:
-  int spawn(double x, double y);
+  int spawn(float x, float y);
 
  private:
-  kge::point<double> screenSize;
+  kge::point<float> screenSize;
   kge::entityHandler& entities;
-  kge::componentHandler<kge::point<double>>& position;
+  kge::componentHandler<kge::point<float>>& position;
   kge::componentHandler<bodyData>& body;
   kge::componentHandler<meteorShape>& meteor;
 };
@@ -252,7 +252,7 @@ class spawnSystem {
 class pauseState final : public kge::abstractState {
  public:
   pauseState(SDLpointers* const aPtr, kge::mainLoop* const mainLoopPtr, kge::entityHandler* aEntities,
-             kge::componentHandler<meteorShape>* aMeteor, kge::componentHandler<kge::point<double>>* aPosition)
+             kge::componentHandler<meteorShape>* aMeteor, kge::componentHandler<kge::point<float>>* aPosition)
       : wPtr(aPtr), mMainLoopPtr(mainLoopPtr), entitiesPtr(aEntities), meteorPtr(aMeteor), positionPtr(aPosition) {
     SDL_Color white = {255, 255, 255};
     if (!(text = TTF_OpenFont("../thirdParty/LiberationSans-Regular.ttf", 14))) {
@@ -276,7 +276,7 @@ class pauseState final : public kge::abstractState {
     SDL_DestroyTexture(message);
     TTF_CloseFont(text);
   };
-  void update(const double /*unused*/) override {}
+  void update(const float /*unused*/) override {}
 
   void processEvents() override {
     SDL_Event event;
@@ -301,7 +301,7 @@ class pauseState final : public kge::abstractState {
     }
   }
 
-  void render(const double /*unused*/) override {
+  void render(const float /*unused*/) override {
     SDL_RenderClear(wPtr->renderer);
 	SDL_SetRenderDrawColor(wPtr->renderer, 50, 50, 50, 100);
     entitiesPtr->for_each([&](auto& ent) {
@@ -321,7 +321,7 @@ class pauseState final : public kge::abstractState {
   kge::mainLoop* const mMainLoopPtr;
   kge::entityHandler* entitiesPtr;
   kge::componentHandler<meteorShape>* meteorPtr;
-  kge::componentHandler<kge::point<double>>* positionPtr;
+  kge::componentHandler<kge::point<float>>* positionPtr;
   TTF_Font* text;
   SDL_Texture* message;
   SDL_Rect rect;
@@ -347,10 +347,10 @@ class gameState final : public kge::abstractState {
       unsigned int builtID = entities.build(startEntity).ID;
       std::random_device rnd;
       std::mt19937 rng(rnd());
-      std::uniform_real_distribution<double> r0(10, WIDTH - 10);
-      std::uniform_real_distribution<double> r1(10, HEIGHT - 10);
+      std::uniform_real_distribution<float> r0(10, WIDTH - 10);
+      std::uniform_real_distribution<float> r1(10, HEIGHT - 10);
       std::uniform_real_distribution<float> r3(-2000, 2000);
-      position.getItem(builtID) = kge::point<double>(r0(rng), r1(rng));
+      position.getItem(builtID) = kge::point<float>(r0(rng), r1(rng));
       body.getItem(builtID) = bodyData(1.0, r3(rng), r3(rng), 0.0, 0.0);
       meteor.getItem(builtID).create();
     }
@@ -362,7 +362,7 @@ class gameState final : public kge::abstractState {
   gameState& operator=(gameState&& other) noexcept = delete;
   ~gameState() override = default;
 
-  void update(const double dt) override { mUpdater.update(dt); }
+  void update(const float dt) override { mUpdater.update(dt); }
 
   void processEvents() override {
     SDL_Event event;
@@ -390,7 +390,7 @@ class gameState final : public kge::abstractState {
     }
   }
 
-  void render(const double dt) override {
+  void render(const float dt) override {
     SDL_RenderClear(wPtr->renderer);
     mRenderSystem.update(dt);
     SDL_RenderPresent(wPtr->renderer);
@@ -400,7 +400,7 @@ class gameState final : public kge::abstractState {
   kge::mainLoop* const mMainLoopPtr;
   kge::threadPool<4>* const mTpPtr;
   kge::entityHandler entities;
-  kge::componentHandler<kge::point<double>> position;
+  kge::componentHandler<kge::point<float>> position;
   kge::componentHandler<bodyData> body;
   kge::componentHandler<meteorShape> meteor;
   movementSystem mMoveSystem;
@@ -437,7 +437,7 @@ class menuState final : public kge::abstractState {
     TTF_CloseFont(text);
   };
 
-  void update(double /*unused*/) override {}
+  void update(float /*unused*/) override {}
 
   void processEvents() override {
     SDL_Event event;
@@ -463,7 +463,7 @@ class menuState final : public kge::abstractState {
     }
   }
 
-  void render(double /*unused*/) override {
+  void render(float /*unused*/) override {
     SDL_RenderClear(wPtr->renderer);
     SDL_RenderCopy(wPtr->renderer, message, NULL, &rect);
     SDL_RenderPresent(wPtr->renderer);

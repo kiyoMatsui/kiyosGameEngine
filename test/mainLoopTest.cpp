@@ -1,6 +1,6 @@
 /*-------------------------------*\
 Copyright 2021 Kiyo Matsui
-KiyosGameEngine v1.3
+KiyosGameEngine v2.0
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -38,7 +38,7 @@ class testState1 : public kge::abstractState {
  public:
   testState1(kge::mainLoop* mainLoopRef) : mMainLoopPtr(mainLoopRef) { kgeTestPrint("constructor testState1"); }
   ~testState1() { kgeTestPrint("destructor testState1"); }
-  void update(double a) {
+  void update(float a) {
     a++;
     INFO("checking correct state is sent");
     REQUIRE(dynamic_cast<testState1*>(mMainLoopPtr->peekState())->counter == 1);
@@ -49,7 +49,7 @@ class testState1 : public kge::abstractState {
     REQUIRE(mMainLoopPtr->changeStatePtr != nullptr);
   }
   void processEvents() {}
-  void render(double a) { a++; }
+  void render(float a) { a++; }
   kge::mainLoop* mMainLoopPtr;
   int counter = 1;
 };
@@ -58,7 +58,7 @@ class testState2 : public kge::abstractState {
  public:
   testState2(kge::mainLoop* mainLoopRef) : mMainLoopPtr(mainLoopRef) { kgeTestPrint("constructor testState2"); }
   ~testState2() { kgeTestPrint("destructor testState2"); }
-  void update(double a) {
+  void update(float a) {
     a++;
     INFO("checking correct state is sent");
     REQUIRE(dynamic_cast<testState2*>(mMainLoopPtr->peekState())->counter == 2);
@@ -69,7 +69,7 @@ class testState2 : public kge::abstractState {
     REQUIRE(mMainLoopPtr->changeStatePtr != nullptr);
   }
   void processEvents() {}
-  void render(double a) { a++; }
+  void render(float a) { a++; }
   kge::mainLoop* mMainLoopPtr;
   int counter = 2;
 };
@@ -78,7 +78,7 @@ class testState3 : public kge::abstractState {
  public:
   testState3(kge::mainLoop* mainLoopRef) : mMainLoopPtr(mainLoopRef) { kgeTestPrint("constructor testState3"); }
   ~testState3() { kgeTestPrint("destructor testState3"); }
-  void update(double a) {
+  void update(float a) {
     a++;
     INFO("checking correct state is sent");
     REQUIRE(dynamic_cast<testState3*>(mMainLoopPtr->peekState())->counter == 3);
@@ -89,7 +89,7 @@ class testState3 : public kge::abstractState {
     REQUIRE(mMainLoopPtr->changeStatePtr != nullptr);
   }
   void processEvents() {}
-  void render(double a) { a++; }
+  void render(float a) { a++; }
   kge::mainLoop* mMainLoopPtr;
   int counter = 3;
 };
@@ -98,7 +98,7 @@ class testState4 : public kge::abstractState {
  public:
   testState4(kge::mainLoop* mainLoopRef) : mMainLoopPtr(mainLoopRef) { kgeTestPrint("constructor testState4"); }
   ~testState4() { kgeTestPrint("destructor testState4"); }
-  void update(double a) {
+  void update(float a) {
     a++;
     INFO("checking correct state is sent");
     REQUIRE(dynamic_cast<testState4*>(mMainLoopPtr->peekState())->counter == 4);
@@ -110,7 +110,7 @@ class testState4 : public kge::abstractState {
     REQUIRE(mMainLoopPtr->changeStatePtr != nullptr);
   }
   void processEvents() {}
-  void render(double a) { a++; }
+  void render(float a) { a++; }
   kge::mainLoop* mMainLoopPtr;
   int counter = 4;
 };
