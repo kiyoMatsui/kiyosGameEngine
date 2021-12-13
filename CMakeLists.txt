@@ -37,8 +37,8 @@ if(MSVC)
 else()
 ## Use compiler debugging flags per default
 INCLUDE(CxxFlags)
-#debug
-#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG} -Werror -std=c++17 -pthread")
+#debug test will fail
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG} -std=c++17 -pthread")
 
 #address sanitizer
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fsanitize=address -g -O1")
