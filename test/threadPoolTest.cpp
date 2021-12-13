@@ -7,13 +7,14 @@ http://www.apache.org/licenses/
 \*-------------------------------*/
 
 #include "catch2/catch.hpp"
+#include <atomic>
 
 #define private public
 #define protected public
 
 #include "kgeThreadPool.h"
 
-int z = 1;
+std::atomic_int z = 1;
 TEST_CASE("thread pool tests") {
   using namespace std::chrono_literals;
   {
@@ -22,7 +23,11 @@ TEST_CASE("thread pool tests") {
     for (unsigned i = 0; i < 8; ++i) {
       tp.submitJob([=]() { z++; });
     }
+    while (z != 9) {
+      std::this_thread::yield();
+    }
   }  // destroyed here before REQUIRE
+
   REQUIRE(z == 9);
   kge::threadPool tp;
   for (unsigned i = 0; i < 12; ++i) {
