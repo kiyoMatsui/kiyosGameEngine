@@ -1,10 +1,11 @@
 /*-------------------------------*\
-Copyright 2021 Kiyo Matsui
-KiyosGameEngine v2.0
+Copyright 2020 Kiyo Matsui
+KiyosGameEngine v2.1 
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
 \*-------------------------------*/
+
 
 //g++ -g ./sdl2Example.cpp -w -lSDL2 -lSDL2_ttf -std=c++17 -pthread -o sdl2Example
 #include <cmath>

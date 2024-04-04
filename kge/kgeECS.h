@@ -1,6 +1,6 @@
 /*-------------------------------*\
-Copyright 2021 Kiyo Matsui
-KiyosGameEngine v2.0
+Copyright 2020 Kiyo Matsui
+KiyosGameEngine v2.1 
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -28,7 +28,7 @@ static constexpr unsigned int maxent = 999999;
 
 class entity {
  public:
-  explicit entity(const bool aAlive, const unsigned int aID, const int aType) : alive(aAlive), ID(aID), type(aType) {}
+  explicit entity(const bool aAlive, const unsigned int aID, const int aType) : alive(aAlive), ID(aID), type(aType), instance(0) {}
   entity(const entity& other) = default;
   entity& operator=(const entity& other) = delete;
   entity(entity&& other) noexcept = default;
@@ -37,11 +37,13 @@ class entity {
   void set(const entity& other) {
     this->alive = other.alive;
     this->type = other.type;
+    this->instance++;
   }
-  
+
   bool alive;
   const unsigned int ID;
   int type;
+  unsigned int instance;
 };
 
 class entityHandler {

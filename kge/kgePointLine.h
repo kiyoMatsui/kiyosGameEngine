@@ -1,6 +1,6 @@
 /*-------------------------------*\
-Copyright 2021 Kiyo Matsui
-KiyosGameEngine v2.0
+Copyright 2020 Kiyo Matsui
+KiyosGameEngine v2.1 
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/
@@ -109,6 +109,12 @@ class point {
     return {x / std::hypot(x, y), y / std::hypot(x, y)};
   }
 };
+
+template <typename Type>
+[[nodiscard]] Type area(const point<Type>& arg1, const point<Type>& arg2, const point<Type>& arg3) {
+  kgeTestPrint("called area");
+  return 0.5f*fabsf(arg1.x*(arg2.y-arg3.y)+arg2.x*(arg3.y-arg1.y)+arg3.x*(arg1.y-arg2.y));
+}
 
 template <typename Type>
 point<Type> operator+(const point<Type>& arg1, const point<Type>& arg2) {

@@ -52,7 +52,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -std=c++17 -p
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -std=c++17 -march=native -pthread")
 endif()
 
-set(BUILD_TESTING true CACHE BOOL "Enable building of tests.")
+set(BUILD_TESTING false CACHE BOOL "Enable building of tests.")
 
 ## Creating Binaries for examples
 if(SFML_FOUND)
